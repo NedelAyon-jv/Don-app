@@ -1,171 +1,400 @@
-import { getApps, initializeApp, cert, type ServiceAccount } from "firebase-admin/app";
-import { getAuth, type Auth } from "firebase-admin/auth";
-import { getFirestore, type Firestore, type Settings } from "firebase-admin/firestore";
-import { getMessaging, type Messaging } from "firebase-admin/messaging";
-import { getStorage, type Storage } from "firebase-admin/storage";
+import type {
+  DocumentData,
+  DocumentSnapshot,
+  Firestore,
+  Query,
+  Transaction,
+  WhereFilterOp,
+} from "firebase-admin/firestore";
+import { firebaseAdmin } from "./firebaseAdmin.service";
 
-interface FirebaseConfig {
-  projectId: string;
-  clientEmail: string;
-  privateKey: string;
-  databaseURL?: string;
-  storageBucket?: string;
+export interface QueryOptions {
+  where?: [string, WhereFilterOp, unknown];
+  orderBy?: { field: string; direction: "asc" | "desc" };
+  limit?: number;
+  startAfter?: DocumentSnapshot;
 }
 
-export class FirebaseAdminService {
-  private static instance: FirebaseAdminService;
-  private _auth: Auth;
-  private _firestore: Firestore;
-  private _storage: Storage;
-  private _messaging: Messaging;
-  private _isInitialized = false;
+export interface PaginationResult<T> {
+  data: T[];
+  lastDoc: DocumentSnapshot | null | undefined;
+  hasMore: boolean;
+  total?: number;
+}
 
-  private constructor() {
-    this.initializeFirebase();
-    this._auth = getAuth();
-    this._firestore = getFirestore();
-    this._storage = getStorage();
-    this._messaging = getMessaging();
-  }
+export interface BatchOperation<T> {
+  type: "create" | "update" | "delete";
+  id?: string;
+  data?: Partial<T>;
+}
 
-  /**
-   * Get singleton instance
-   */
-  public static getInstance(): FirebaseAdminService {
-    if (!FirebaseAdminService.instance) {
-      FirebaseAdminService.instance = new FirebaseAdminService();
-    }
+export class FirebaseService {
+  private db: Firestore;
 
-    return FirebaseAdminService.instance;
-  }
+  constructor() {
+    this.db = firebaseAdmin.firestore;
 
-  private initializeFirebase(): void {
-    if (getApps().length > 0) {
-      this._isInitialized = true;
-      return;
-    }
-
-    try {
-      const config = this.getFirebaseConfig();
-
-      initializeApp({
-        credential: cert(config as ServiceAccount),
-        databaseURL: config.databaseURL,
-        storageBucket: config.storageBucket,
-        projectId: config.projectId,
-      });
-
-      this._isInitialized = true;
-      this._firestore = getFirestore();
-      this.configureFirestore();
-
-      console.log("✅ Firebase Admin SDK initialized successfully");
-    } catch (error) {
-      console.error("❌ Firebase Admin SDK initialization failed:", error);
-      throw new Error("Failed to initialize Firebase Admin SDK");
-    }
-  }
-
-  private getFirebaseConfig(): FirebaseConfig {
-    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
-
-      if (!process.env.FIREBASE_CLIENT_EMAIL) {
-        throw new Error("FIREBASE_CLIENT_EMAIL environment variable is required");
-      }
-
-      return {
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey,
-        databaseURL: process.env.FIREBASE_DATABASE_URL,
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-      };
-    }
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const serviceAccount = require("../../serviceAccountKey.json");
-
-      return {
-        projectId: serviceAccount.project_id,
-        clientEmail: serviceAccount.client_email,
-        privateKey: serviceAccount.private_key,
-        databaseURL: process.env.FIREBASE_DATABASE_URL,
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-      };
-    } catch {
-      throw new Error(
-        "Firebase Admin SDK initialization failed. " +
-          "Please set FIREBASE environment variables or provide serviceAccountKey.json. " +
-          "Required variables: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY"
-      );
-    }
+    this.configureFirestore();
   }
 
   private configureFirestore(): void {
-    const firebaseSettings: Settings = {
+    const settings: FirebaseFirestore.Settings = {
       ignoreUndefinedProperties: true,
     };
 
     if (process.env.NODE_ENV === "development") {
-      firebaseSettings.host = "localhost:8080";
-      firebaseSettings.ssl = false;
+      console.log("Firestore running in development mode");
     }
 
-    this._firestore.settings(firebaseSettings);
+    this.db.settings(settings);
   }
 
   /**
-   * Public getters for Firebase services
+   *  ===== CORE CRUD OPERATION =====
    */
-  public get auth(): Auth {
-    this.ensureInitialized();
-    return this._auth;
-  }
 
-  public get firestore(): Firestore {
-    this.ensureInitialized();
-    return this._firestore;
-  }
-
-  public get storage(): Storage {
-    this.ensureInitialized();
-    return this._storage;
-  }
-
-  public get messaging(): Messaging {
-    this.ensureInitialized();
-    return this._messaging;
-  }
-
-  /**
-   * Ensure Firebase is initialized before using services
-   */
-  private ensureInitialized(): void {
-    if (!this._isInitialized) {
-      throw new Error("Firebase Admin SDK is not initialized");
-    }
-  }
-
-  /**
-   * Service shutdown
-   */
-  public async close(): Promise<void> {
+  async create<T extends DocumentData>(
+    collectionPath: string,
+    data: Omit<T, "id" | "createdAt" | "updatedAt">,
+    id?: string
+  ): Promise<string> {
     try {
-      await Promise.all([this._firestore.terminate()]);
-      console.log("Firebase Admin SDK connection closed");
+      const docRef = id
+        ? this.db.collection(collectionPath).doc(id)
+        : this.db.collection(collectionPath).doc();
+
+      const timestamp = new Date();
+      const documentData = {
+        ...data,
+        id: docRef.id,
+        createAt: timestamp,
+        updatedAt: timestamp,
+      };
+
+      await docRef.set(documentData);
+
+      return docRef.id;
     } catch (error) {
-      console.error("Error closing Firebase connection:", error);
+      console.error(`Firestore create error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  async update<T>(
+    collectionPath: string,
+    id: string,
+    data: Partial<Omit<T, "id" | "createdAt" | "updatedAt">>
+  ): Promise<void> {
+    try {
+      const docRef = this.db.collection(collectionPath).doc(id);
+
+      await docRef.update({
+        ...data,
+        updateAt: new Date(),
+      });
+    } catch (error) {
+      console.error(`Firestore updated error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  async delete(collectionPath: string, id: string): Promise<void> {
+    try {
+      await this.db.collection(collectionPath).doc(id).delete();
+    } catch (error) {
+      console.error(`Firestore delete error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  async getById<T>(collectionPath: string, id: string): Promise<T | null> {
+    try {
+      const doc = await this.db.collection(collectionPath).doc(id).get();
+
+      if (!doc) {
+        return null;
+      }
+
+      return {
+        id: doc.id,
+        ...doc.data(),
+      } as T;
+    } catch (error) {
+      console.error(`Firestore get error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
     }
   }
 
   /**
-   * Utility method to check if service is initialized
+   *  ===== QUERY OPERATIONS =====
    */
-  public get isInitialized(): boolean {
-    return this._isInitialized;
+
+  async query<T>(
+    collectionPath: string,
+    options: QueryOptions = {}
+  ): Promise<T[]> {
+    try {
+      let query: Query = this.db.collection(collectionPath);
+
+      if (options.where) {
+        query = query.where(...options.where);
+      }
+
+      if (options.orderBy) {
+        query = query.orderBy(options.orderBy.field, options.orderBy.direction);
+      }
+
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+
+      if (options.startAfter) {
+        query = query.startAfter(options.startAfter);
+      }
+
+      const snapshot = await query.get();
+
+      return snapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as T)
+      );
+    } catch (error) {
+      console.error(`Firestore query error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  async queryPagination<T>(
+    collectionPath: string,
+    options: QueryOptions & { pageSize: number },
+    startAfter?: DocumentSnapshot
+  ): Promise<PaginationResult<T>> {
+    try {
+      let query: Query = this.db.collection(collectionPath);
+
+      if (options.where) {
+        query = query.where(...options.where);
+      }
+
+      if (options.orderBy) {
+        query = query.orderBy(options.orderBy.field, options.orderBy.direction);
+      }
+
+      query = query.limit(options.pageSize + 1);
+
+      if (startAfter) {
+        query = query.startAfter(startAfter);
+      }
+
+      const snapshot = await query.get();
+      const docs = snapshot.docs;
+      const hasMore = docs.length > options.pageSize;
+
+      if (hasMore) {
+        docs.pop();
+      }
+
+      const data = docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as T)
+      );
+
+      return {
+        data,
+        lastDoc: hasMore ? docs[docs.length - 1] : null,
+        hasMore,
+      };
+    } catch (error) {
+      console.error(
+        `Firestore paginated query error in ${collectionPath}:`,
+        error
+      );
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  async getAll<T>(collectionPath: string): Promise<T[]> {
+    return this.query<T>(collectionPath);
+  }
+
+  /**
+   * ===== BATCH/MULTI OPERATIONS =====
+   */
+
+  async batch<T>(operations: BatchOperation<T>[]): Promise<void> {
+    const batch = this.db.batch();
+    const timestamp = new Date();
+
+    try {
+      for (const operation of operations) {
+        switch (operation.type) {
+          case "create":
+            if (!operation.data) {
+              throw new Error("Create operation requires data");
+            }
+
+            const docRef = this.db.collection("temp").doc();
+
+            batch.set(docRef, {
+              ...operation.data,
+              id: docRef.id,
+              createdAt: timestamp,
+              updatesAt: timestamp,
+            });
+            break;
+          case "update":
+            if (!operation.data || !operation.id) {
+              throw new Error("Update operations requires id and data");
+            }
+
+            const updateRef = this.db.collection("temp").doc(operation.id);
+
+            batch.update(updateRef, {
+              ...operation.data,
+              updateAt: timestamp,
+            });
+            break;
+          case "delete":
+            if (!operation.id) {
+              throw new Error("Delete operations requires id");
+            }
+
+            const deleteRef = this.db.collection("temp").doc(operation.id);
+
+            batch.delete(deleteRef);
+            break;
+        }
+      }
+
+      await batch.commit();
+    } catch (error) {
+      console.error("Firestore batch operation error:", error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  /**
+   * ===== TRANSACTION OPERATIONS =====
+   */
+  async runTransaction<T>(
+    transactionFn: (transaction: Transaction) => Promise<T>
+  ): Promise<T> {
+    try {
+      return await this.db.runTransaction(async (transaction) => {
+        return await transactionFn(transaction);
+      });
+    } catch (error) {
+      console.error("Firestore transaction error:", error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  /**
+   * ===== REAL-TIME OPERATIONS =====
+   */
+  subscribeToCollection<T>(
+    collectionPath: string,
+    callback: (docs: T[]) => void,
+    onError?: (error: Error) => void
+  ): () => void {
+    try {
+      return this.db.collection(collectionPath).onSnapshot(
+        (snapshot) => {
+          const docs = snapshot.docs.map(
+            (doc) =>
+              ({
+                id: doc.id,
+                ...doc.data(),
+              } as T)
+          );
+          callback(docs);
+        },
+        (error) => {
+          console.error(
+            `Firestore subscription error in ${collectionPath}:`,
+            error
+          );
+          onError?.(error);
+        }
+      );
+    } catch (error) {
+      console.error("Firestore subscriptions setup error:", error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  /**
+   * ===== UTILITY METHODS =====
+   */
+
+  async exists(collectionPath: string, id: string): Promise<boolean> {
+    try {
+      const doc = await this.db.collection(collectionPath).doc(id).get();
+      return doc.exists;
+    } catch(error) {
+      console.error(`Firestore exists check error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  async count(collectionPath: string, conditions?: QueryOptions): Promise<number> {
+    try {
+      let query: Query = this.db.collection(collectionPath);
+
+      if (conditions?.where) {
+        query = query.where(...conditions.where);
+      }
+
+      const snapshot = await query.get();
+      return snapshot.size;
+    } catch(error) {
+      console.error(`Firestore count error in ${collectionPath}:`, error);
+      throw this.handleFirestoreError(error);
+    }
+  }
+
+  private handleFirestoreError(error: any): Error {
+    console.error("Firestore Operation Error:", error);
+
+    if (error.code === "not-found") {
+      return new Error("DOCUMENT_NOT_FOUND");
+    }
+
+    if (error.code === "permission-denied") {
+      return new Error("PERMISSION_DENIED");
+    }
+
+    if (error.code === "already-exists") {
+      return new Error("DOCUMENT_ALREADY_EXISTS");
+    }
+
+    return new Error(error.message || "FIRESTORE_OPERATION_FAILED");
+  }
+
+  async healthCheck(): Promise<{status: string, latency: number}> {
+    const startTime = Date.now();
+
+    try {
+      await this.db.collection('_health').doc('check').get();
+      const latency = Date.now() - startTime;
+
+      return {
+        status: 'healthy',
+        latency
+      };
+    } catch(error) {
+      return {
+        status: 'unhealthy',
+        latency: Date.now() - startTime
+      }
+    }
   }
 }
 
-export const firebaseAdmin = FirebaseAdminService.getInstance();
+export const firestoreService = new FirebaseService();

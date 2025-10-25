@@ -1,4 +1,4 @@
-import { firebaseAdmin } from '../services/Firebase/firebase.service';
+import { firebaseAdmin } from '../services/Firebase/firebaseAdmin.service';
 
 async function testFirebase() {
   try {

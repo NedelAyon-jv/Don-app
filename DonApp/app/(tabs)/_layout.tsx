@@ -30,6 +30,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="profile" // Corresponde al archivo app/(tabs)/profile.tsx
+        options={{
+          title: 'Perfil',
+          headerTitle: 'Mi Perfil DonApp', // Título en la parte de arriba
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

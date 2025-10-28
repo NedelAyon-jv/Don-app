@@ -1,4 +1,4 @@
-import { message, safeParse } from "valibot";
+import { safeParse } from "valibot";
 import {
   BaseUserSchema,
   MinimalUserSchema,
@@ -10,7 +10,6 @@ import {
 import { firestoreService } from "../Firebase/firebase.service";
 import type { MinimalUser, PublicUser, User } from "../../models/types/user";
 import { compare, hash } from "bcrypt";
-import { file } from "bun";
 
 export class UserService {
   // FIRE BASE COLLECTION REFERENCE

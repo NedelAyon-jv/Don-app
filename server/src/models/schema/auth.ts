@@ -40,5 +40,5 @@ export const JWTPayloadSchema = object({
     ),
     iat: number(), // registrado
     exp: number(), // expiracion
-    jti: number(), // id de token
+    jti: string(), // id de token
 })

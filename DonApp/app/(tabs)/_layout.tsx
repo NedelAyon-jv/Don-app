@@ -34,7 +34,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="publicar"
         options={{
           title: 'Publicar',
           tabBarIcon: ({ color }) => <Ionicons size={28} name="add-circle" color={color} />,

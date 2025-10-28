@@ -439,6 +439,26 @@ export class UserService {
 
   /**
    * ================================================
+   *                       UTILS
+   * ================================================
+   */
+
+  /**
+   * Verifies a plain password against a hashed password.
+   *
+   * @param plainPassword - Plain text password to verify
+   * @param hashedPassword - Hashed password to compare against
+   * @returns Promise resolving to true if passwords match
+   */
+  static async verifyPassword(
+    plainPassword: string,
+    hashedPassword: string
+  ): Promise<boolean> {
+    return compare(plainPassword, hashedPassword);
+  }
+
+  /**
+   * ================================================
    *                     PRIVATE
    * ================================================
    */

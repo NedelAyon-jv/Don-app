@@ -1,21 +1,23 @@
+import { Colors } from '@/constants/theme'; // Tu importación del tema
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useState } from 'react'; // Importar useState
+import React, { useState } from 'react';
 import {
   Dimensions,
   FlatList,
   Image,
-  Modal, // Importar Modal
+  Modal,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- 1. Datos Estáticos (Maqueta) ---
-// (Mismos datos de antes)
+// (Sin cambios)
 const mockFeedData = [
   { id: '1', title: 'Silla de oficina', type: 'Trueque', imageUrl: 'https...Silla', location: 'Centro', category: 'Muebles' },
   { id: '2', title: 'Monitor 24"', type: 'Donación', imageUrl: 'https...Monitor', location: 'Camino Real', category: 'Electrónica' },
@@ -26,12 +28,19 @@ const mockFeedData = [
 ];
 
 // --- 2. Interface y Dimensiones ---
-// (Mismos de antes)
-interface ArticleProps { title: string; type: 'Donación' | 'Trueque'; imageUrl: string; location: string; }
+// (Añadimos 'theme' a la interface)
+interface ArticleProps { 
+  title: string; 
+  type: 'Donación' | 'Trueque'; 
+  imageUrl: string; 
+  location: string;
+  theme: typeof Colors.light; // <-- Prop para pasar el tema
+}
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 24) / 2 - 8;
 
-// --- 3. Definición de Categorías (¡Nuevo!) ---
+// --- 3. Definición de Categorías ---
+// (Sin cambios)
 const CATEGORIES = [
   { id: '1', name: 'Alimentos', icon: 'food-apple' },
   { id: '2', name: 'Ropa y Calzado', icon: 'tshirt-crew' },
@@ -42,17 +51,18 @@ const CATEGORIES = [
   { id: '7', name: 'Otros', icon: 'dots-horizontal' },
 ];
 
-// --- 4. Componente de Tarjeta ---
-// (Mismo componente ArticleCard de antes)
-const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location }) => (
-  <TouchableOpacity style={styles.card}>
-    <Image source={{ uri: imageUrl }} style={styles.cardImage} />
+// --- 4. Componente de Tarjeta (Actualizado) ---
+// (Ahora recibe 'theme' y aplica colores dinámicamente)
+const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location, theme }) => (
+  <TouchableOpacity style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}> {/* <-- Colores de tema */}
+    <Image source={{ uri: imageUrl }} style={[styles.cardImage, { backgroundColor: theme.border }]} /> {/* <-- Colores de tema */}
     <View style={styles.cardContent}>
-      <Text style={styles.cardTitle} numberOfLines={2}>{title}</Text>
-      <Text style={styles.cardLocation}>
-        <Ionicons name="location-sharp" size={14} color="#555" /> {location}
+      <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>{title}</Text> {/* <-- Colores de tema */}
+      <Text style={[styles.cardLocation, { color: theme.text }]}> {/* <-- Colores de tema */}
+        <Ionicons name="location-sharp" size={14} color={theme.text} /> {location} {/* <-- Colores de tema */}
       </Text>
     </View>
+    {/* Dejamos los badges con sus colores fijos, ya que son funcionales (verde/azul) */}
     <View style={[styles.badge, type === 'Donación' ? styles.badgeDonation : styles.badgeTrade]}>
       <Text style={styles.badgeText}>{type}</Text>
     </View>
@@ -62,50 +72,59 @@ const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location }
 
 // --- 5. Componente Principal (HomeScreen) ---
 export default function HomeScreen() {
-  // --- Estados para el Modal y Filtro (¡Nuevo!) ---
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme]; // Tu objeto de tema (light o dark)
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Lógica de simulación de filtro
   const handleSelectCategory = (category: string | null) => {
     setSelectedCategory(category);
     setModalVisible(false);
     console.log('Filtrando por:', category ?? 'Todos');
-    // Aquí, en el futuro, harías un fetch de los datos filtrados
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* --- Barra de Búsqueda --- */}
-      <View style={styles.header}>
-        <View style={styles.searchBar}>
-          <FontAwesome name="search" size={18} color="gray" style={styles.searchIcon} />
-          <TextInput placeholder="Buscar artículos..." style={styles.searchInput} />
+    // Aplicas el color de fondo principal
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      
+      {/* Barra de Búsqueda */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}> {/* <-- Color de tema */}
+        <View style={[styles.searchBar, { backgroundColor: theme.card }]}> {/* <-- Color de tema */}
+          <FontAwesome name="search" size={18} color={theme.text} style={styles.searchIcon} /> {/* <-- Color de tema */}
+          <TextInput 
+            placeholder="Buscar artículos..."
+            style={[styles.searchInput, { color: theme.text }]}
+            placeholderTextColor={theme.text} // <-- Color de tema
+          />
         </View>
         
-        {/* Botón de Filtro (actualizado) */}
+        {/* Botón de Filtro */}
         <TouchableOpacity style={styles.filterButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="filter" size={24} color="#333" />
+          <Ionicons name="filter" size={24} color={theme.primary} /> {/* <-- Color de tema (usamos 'primary' por ser interactivo) */}
         </TouchableOpacity>
       </View>
 
       {/* --- Feed de Artículos --- */}
       <FlatList
-        data={mockFeedData} // En el futuro, filtrarías esta data
-        renderItem={({ item }) => <ArticleCard {...item} />}
+        data={mockFeedData}
+        renderItem={({ item }) => (
+          // Pasamos el 'theme' como prop a la tarjeta
+          <ArticleCard {...item} theme={theme} /> // <-- Prop de tema
+        )}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContainer}
         ListHeaderComponent={
-          // Título dinámico (actualizado)
-          <Text style={styles.feedTitle}>
+          // Título dinámico
+          <Text style={[styles.feedTitle, { color: theme.text }]}> {/* <-- Color de tema */}
             {selectedCategory ? `Viendo en "${selectedCategory}"` : 'Artículos Recientes'}
           </Text>
         }
       />
 
-      {/* --- MODAL DE CATEGORÍAS (¡Nuevo!) --- */}
+      {/* --- MODAL DE CATEGORÍAS --- */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -113,28 +132,26 @@ export default function HomeScreen() {
         onRequestClose={() => setModalVisible(false)}>
         
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Filtrar por Categoría</Text>
+          {/* Usamos theme.card para el fondo del modal */}
+          <View style={[styles.modalContainer, { backgroundColor: theme.card }]}> {/* <-- Color de tema */}
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Filtrar por Categoría</Text> {/* <-- Color de tema */}
             
-            {/* Botón para "Todos" */}
             <TouchableOpacity
-              style={styles.categoryItem}
+              style={[styles.categoryItem, { borderBottomColor: theme.border }]} // <-- Color de tema
               onPress={() => handleSelectCategory(null)}>
-              <FontAwesome name="th-large" size={20} color="#333" />
-              <Text style={styles.categoryText}>Mostrar Todos</Text>
+              <FontAwesome name="th-large" size={20} color={theme.text} /> {/* <-- Color de tema */}
+              <Text style={[styles.categoryText, { color: theme.text }]}>Mostrar Todos</Text> {/* <-- Color de tema */}
             </TouchableOpacity>
 
-            {/* Lista de Categorías */}
             <FlatList
               data={CATEGORIES}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.categoryItem}
+                  style={[styles.categoryItem, { borderBottomColor: theme.border }]} // <-- Color de tema
                   onPress={() => handleSelectCategory(item.name)}>
-                  {/* Usamos MaterialCommunityIcons aquí, ¡asegúrate de importarlo! */}
-                  <MaterialCommunityIcons name={item.icon} size={22} color="#333" />
-                  <Text style={styles.categoryText}>{item.name}</Text>
+                  <MaterialCommunityIcons name={item.icon} size={22} color={theme.text} /> {/* <-- Color de tema */}
+                  <Text style={[styles.categoryText, { color: theme.text }]}>{item.name}</Text> {/* <-- Color de tema */}
                 </TouchableOpacity>
               )}
             />
@@ -146,40 +163,126 @@ export default function HomeScreen() {
   );
 }
 
-// --- 6. Estilos ---
+// --- 6. Estilos (Limpios de Colores) ---
+// Ahora el StyleSheet solo define ESTRUCTURA, no colores.
 const styles = StyleSheet.create({
-  // ... (Estilos de antes: container, header, searchBar, etc.)
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#f4f4f8', borderRadius: 10, paddingHorizontal: 12 },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, height: 40, fontSize: 15 },
-  filterButton: { marginLeft: 10, padding: 8 },
-  feedTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginVertical: 12, paddingHorizontal: 12 },
-  listContainer: { paddingHorizontal: 12, paddingBottom: 16 },
-  row: { justifyContent: 'space-between' },
-  card: { width: cardWidth, backgroundColor: '#f9f9f9', borderRadius: 8, borderWidth: 1, borderColor: '#eee', marginBottom: 16, overflow: 'hidden' },
-  cardImage: { width: '100%', height: 120, backgroundColor: '#e0e0e0' },
-  cardContent: { padding: 10, height: 80 },
-  cardTitle: { fontSize: 15, fontWeight: '600', color: '#333' },
-  cardLocation: { fontSize: 13, color: '#555', marginTop: 6 },
-  badge: { position: 'absolute', top: 8, right: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badgeDonation: { backgroundColor: '#d4edda' },
-  badgeTrade: { backgroundColor: '#cce5ff' },
-  badgeText: { fontSize: 12, fontWeight: 'bold', color: '#0056b3' },
+  container: { 
+    flex: 1, 
+    // quitamos backgroundColor
+  },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    borderBottomWidth: 1, 
+    // quitamos borderBottomColor
+  },
+  searchBar: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderRadius: 10, 
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+    // quitamos backgroundColor
+  },
+  searchIcon: { 
+    marginRight: 8,
+  },
+  searchInput: { 
+    flex: 1, 
+    height: 40, 
+    fontSize: 15,
+  },
+  filterButton: { 
+    marginLeft: 10, 
+    padding: 8,
+  },
+  feedTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginVertical: 12, 
+    paddingHorizontal: 12,
+    // quitamos color
+  },
+  listContainer: { 
+    paddingHorizontal: 12, 
+    paddingBottom: 16,
+  },
+  row: { 
+    justifyContent: 'space-between',
+  },
+  card: { 
+    width: cardWidth, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    marginBottom: 16, 
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
+    // quitamos backgroundColor y borderColor
+  },
+  cardImage: { 
+    width: '100%', 
+    height: 120,
+    // quitamos backgroundColor
+  },
+  cardContent: { 
+    padding: 10, 
+    height: 80,
+  },
+  cardTitle: { 
+    fontSize: 15, 
+    fontWeight: '600',
+    // quitamos color
+  },
+  cardLocation: { 
+    fontSize: 13, 
+    marginTop: 6,
+    // quitamos color
+  },
   
-  // --- Estilos del Modal (¡Nuevos!) ---
+  // --- Estilos de Badges (Se quedan igual) ---
+  badge: { 
+    position: 'absolute', 
+    top: 8, 
+    right: 8, 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 6,
+  },
+  badgeDonation: { 
+    backgroundColor: '#d4edda', // Verde claro funcional
+  },
+  badgeTrade: { 
+    backgroundColor: '#cce5ff', // Azul claro funcional
+  },
+  badgeText: { 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    color: '#0056b3',
+  },
+  
+  // --- Estilos del Modal (Limpios de Colores) ---
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // El overlay oscuro se queda
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
-    height: '60%', // Ocupa el 60% de la pantalla
+    height: '60%',
+    // quitamos backgroundColor
   },
   modalTitle: {
     fontSize: 22,
@@ -192,7 +295,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    // quitamos borderBottomColor
   },
   categoryText: {
     fontSize: 17,

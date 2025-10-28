@@ -1,5 +1,7 @@
 import { hash } from "bcrypt";
+import { password } from "bun";
 import {
+  any,
   boolean,
   custom,
   email,
@@ -20,6 +22,7 @@ const phoneRegex = /^\+?[\d\s\-()]{10,}$/;
 export const BaseUserSchema = object({
   id: string(),
   email: string(),
+  password: string(),
   username: string(),
   fullname: string(),
   phone: string(),
@@ -30,11 +33,34 @@ export const BaseUserSchema = object({
     longitude: number(),
   }),
   rating: object({
-    average: string(),
-    count: string(),
+    average: number(),
+    count: number(),
   }),
   isVerified: boolean(),
 });
+
+export const PublicUserSchema = object({
+  id: string(),
+  username: string(),
+  fullname: string(),
+  bio: optional(string()),
+  profilePicture: string(),
+  rating: optional(
+    object({
+      average: number(),
+      count: number(),
+    })
+  ),
+  isVerified: boolean()
+});
+
+export const MinimalUserSchema = object({
+  id: string(),
+  username: string(),
+  fullname: string(),
+  profilePicture: string(),
+  isVerified: boolean()
+})
 
 //export const PublicUserSchema = Object({}) should add ???
 //export const MinimalUserSchema = Object({}) should add ???
@@ -52,10 +78,6 @@ export const UserRegistrationSchema = object({
       passwordRegex,
       "Password must contain at least one uppercase letter, one lowercase letter and one number"
     ),
-    transform(async (password) => {
-      const saltRound = 12;
-      return await hash(password, saltRound);
-    })
   ),
   username: pipe(
     string("Username must be a string"),
@@ -125,6 +147,7 @@ export const UserUpdateSchema = object({
       transform((bio) => bio.trim())
     )
   ),
+  profilePicture: optional(any()),
   location: optional(
     object({
       latitude: pipe(
@@ -154,12 +177,10 @@ export const UserUpdateSchema = object({
   rating: optional(
     object({
       average: pipe(
-        string("Average rating must be a number"),
-        transform((avg) => parseFloat(avg))
+        number("Average rating must be a number"),
       ),
       count: pipe(
-        string("Rating count must be a number"),
-        transform((count) => parseInt(count))
+        number("Rating count must be a number"),
       ),
     })
   ),
@@ -180,9 +201,5 @@ export const PasswordChangeSchema = object({
       passwordRegex,
       "New password must contain at least one uppercase letter, one lowercase letter, and one number"
     ),
-    transform(async (password) => {
-      const saltRound = 12;
-      return await hash(password, saltRound);
-    })
   ),
 });

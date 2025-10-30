@@ -53,7 +53,7 @@ export const PublicUserSchema = object({
       count: number(),
     })
   ),
-  isVerified: boolean()
+  isVerified: boolean(),
 });
 
 export const MinimalUserSchema = object({
@@ -61,8 +61,8 @@ export const MinimalUserSchema = object({
   username: string(),
   fullname: string(),
   profilePicture: string(),
-  isVerified: boolean()
-})
+  isVerified: boolean(),
+});
 
 //export const PublicUserSchema = Object({}) should add ???
 //export const MinimalUserSchema = Object({}) should add ???
@@ -79,7 +79,7 @@ export const UserRegistrationSchema = object({
     regex(
       passwordRegex,
       "Password must contain at least one uppercase letter, one lowercase letter and one number"
-    ),
+    )
   ),
   username: pipe(
     string("Username must be a string"),
@@ -93,21 +93,17 @@ export const UserRegistrationSchema = object({
     maxLength(50, "Full name cannot be exceed 50 characters"),
     transform((name) => name.trim())
   ),
-  phone: optional(
-    pipe(
-      string("Phone must be a string"),
-      regex(phoneRegex, "Please enter a valid phone number"),
-      transform((phone) => phone.replace(/\s+/g, "").trim())
-    )
+  phone: pipe(
+    string("Phone must be a string"),
+    regex(phoneRegex, "Please enter a valid phone number"),
+    transform((phone) => phone.replace(/\s+/g, "").trim())
   ),
-  type: optional(
-    pipe(
-      string('Type must be a string'),
-      union([
-        literal('admin'),
-        literal('user'),
-        literal('donationCenter')
-      ], 'Type must be one of: admin, user, donationCenter')
+
+  type: pipe(
+    string("Type must be a string"),
+    union(
+      [literal("admin"), literal("user"), literal("donationCenter")],
+      "Type must be one of: admin, user, donationCenter"
     )
   ),
 });
@@ -188,22 +184,17 @@ export const UserUpdateSchema = object({
   ),
   rating: optional(
     object({
-      average: pipe(
-        number("Average rating must be a number"),
-      ),
-      count: pipe(
-        number("Rating count must be a number"),
-      ),
+      average: pipe(number("Average rating must be a number")),
+      count: pipe(number("Rating count must be a number")),
     })
   ),
   type: optional(
     pipe(
-      string('Type must be a string'),
-      union([
-        literal('admin'),
-        literal('user'),
-        literal('donationCenter')
-      ], 'Type must be one of: admin, user, donationCenter')
+      string("Type must be a string"),
+      union(
+        [literal("admin"), literal("user"), literal("donationCenter")],
+        "Type must be one of: admin, user, donationCenter"
+      )
     )
   ),
   isVerified: optional(
@@ -222,6 +213,6 @@ export const PasswordChangeSchema = object({
     regex(
       passwordRegex,
       "New password must contain at least one uppercase letter, one lowercase letter, and one number"
-    ),
+    )
   ),
 });

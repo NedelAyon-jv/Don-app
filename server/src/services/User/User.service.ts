@@ -53,7 +53,7 @@ export class UserService {
         password: hashedPassword,
         username: validatedData.username,
         fullname: validatedData.fullname,
-        phone: validatedData.phone ? validatedData.phone : "",
+        phone: validatedData.phone,
         bio: "",
         profilePicture: "",
         rating: {
@@ -64,8 +64,8 @@ export class UserService {
           latitude: 0,
           longitude: 0,
         },
+        type: validatedData.type,
         isVerified: false,
-        type: validatedData.type
       };
 
       return await firestoreService.create<User>(

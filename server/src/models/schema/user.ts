@@ -28,10 +28,6 @@ export const BaseUserSchema = object({
   phone: string(),
   bio: string(),
   profilePicture: string(),
-  location: object({
-    latitude: number(),
-    longitude: number(),
-  }),
   rating: object({
     average: number(),
     count: number(),
@@ -148,32 +144,6 @@ export const UserUpdateSchema = object({
     )
   ),
   profilePicture: optional(any()),
-  location: optional(
-    object({
-      latitude: pipe(
-        string("Latitude must be a string"),
-        transform((val) => parseFloat(val)),
-        custom(
-          (val) =>
-            !isNaN(val as number) &&
-            (val as number) >= -90 &&
-            (val as number) <= 90,
-          "Latitude must be a valid number between -90 and 90"
-        )
-      ),
-      longitude: pipe(
-        string("Longitude must be a string"),
-        transform((val) => parseFloat(val)),
-        custom(
-          (val) =>
-            !isNaN(val as number) &&
-            (val as number) >= -180 &&
-            (val as number) <= 180,
-          "Longitude must be a valid number between -180 and 180"
-        )
-      ),
-    })
-  ),
   rating: optional(
     object({
       average: pipe(

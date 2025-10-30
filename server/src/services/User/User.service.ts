@@ -60,10 +60,6 @@ export class UserService {
           average: 0,
           count: 0,
         },
-        location: {
-          latitude: 0,
-          longitude: 0,
-        },
         isVerified: false,
       };
 

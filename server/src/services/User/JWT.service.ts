@@ -21,6 +21,7 @@ interface TokenConfig {
   };
 }
 
+// In-memory token blacklist (use Redis in production)
 const tokenBlacklist = new Set<string>();
 
 export class JWTService {

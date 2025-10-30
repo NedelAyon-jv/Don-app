@@ -40,6 +40,12 @@ export class CacheMiddleware {
     }
   }
 
+  /**
+   * Express middleware for response caching.
+   *
+   * @param config - Cache configuration options
+   * @returns Express middleware function
+   */
   static cache(config: CacheConfig) {
     return (req: Request, res: Response, next: NextFunction) => {
       if (req.method != "GET") {
@@ -89,6 +95,11 @@ export class CacheMiddleware {
     };
   }
 
+  /**
+   * Clears cached entries, optionally by pattern match.
+   *
+   * @param pattern - String pattern to match cache keys (optional)
+   */
   static clearCache(pattern?: string) {
     if (!pattern) {
       this.cacheStore = {};
@@ -102,6 +113,11 @@ export class CacheMiddleware {
     });
   }
 
+  /**
+   * Gets cache statistics including total, active, and expired entries.
+   *
+   * @returns Cache statistics object
+   */
   static getStats() {
     const keys = Object.keys(this.cacheStore);
     const now = Date.now();
@@ -116,6 +132,13 @@ export class CacheMiddleware {
     };
   }
 
+  /**
+   * Generates a cache key based on request and configuration.
+   *
+   * @param req - Express request object
+   * @param config - Cache configuration
+   * @returns Generated cache key string
+   */
   private static generateCacheKey(req: Request, config: CacheConfig): string {
     const parts = [req.originalUrl];
 
@@ -133,6 +156,19 @@ export class CacheMiddleware {
   }
 }
 
+/**
+ * Pre-configured cache middleware for common use cases.
+ *
+ * @example
+ * // Apply short-term caching
+ * router.get('/latest-news', cache.short, newsController.latest);
+ *
+ * // Apply user-specific caching
+ * router.get('/profile', cache.user, userController.profile);
+ *
+ * // Apply long-term public caching
+ * router.get('/categories', cache.long, categoryController.list);
+ */
 export const cache = {
   short: CacheMiddleware.cache({
     ttl: 30 * 1000, // 30 seconds
@@ -167,6 +203,13 @@ export const cache = {
   },
 };
 
+/**
+ * Initializes middleware services and sets up graceful shutdown handlers.
+ *
+ * @example
+ * // Call in your main application file
+ * initializeMiddleware();
+ */
 RateLimitMiddleware.initialize();
 CacheMiddleware.initialize();
 

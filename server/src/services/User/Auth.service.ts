@@ -1,4 +1,4 @@
-import { is, safeParse } from "valibot";
+import { safeParse } from "valibot";
 import type { AuthResponse, AuthToken } from "../../models/types/auth";
 import { UserRegistrationSchema } from "../../models/schema/user";
 import { UserService } from "./User.service";
@@ -9,6 +9,7 @@ import {
   LoginSchema,
   RefreshTokenSchema,
 } from "../../models/schema/auth";
+import { verify } from "crypto";
 
 export class AuthService {
   /**
@@ -40,7 +41,7 @@ export class AuthService {
       }
 
       const validatedData = result.output;
-      const userId = await UserService.createsUer(validatedData);
+      const userId = await UserService.createsUser(validatedData);
 
       const user = await UserService.getUserById(userId);
 

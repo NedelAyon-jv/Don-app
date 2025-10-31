@@ -16,6 +16,7 @@ import compression from "compression";
 import morgan from "morgan";
 
 import userRoutes from "./src/routes/user/user.router";
+import authRoutes from "./src/routes/user/auth.router";
 
 class BackendServer {
   public app: Application;
@@ -122,8 +123,8 @@ class BackendServer {
 
   private initializeRoutes(): void {
     // API routes
-    //this.app.use("/api/auth", authRoutes);
     this.app.use("/api/users", userRoutes);
+    this.app.use("/api/auth", authRoutes);
 
     // Root endpoint
     this.app.get("/", (req: Request, res: Response) => {

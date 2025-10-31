@@ -227,3 +227,5 @@ router.post(
   validate.body(PasswordChangeSchema),
   asyncHandler(AuthController.forgotPassword)
 );
+
+export default router;

@@ -4,7 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-     "test:firebase": "bun run src/test/test-firebase.ts"
+     "dev": "bun --watch index.ts",
+     "start": "bun index.ts",
+     "start:prod": "NODE_ENV=production bun dist/index.js",
+
+     "test:firebase": "bun run src/test/test-firebase.ts",
+
+     "type-check": "bunx tsc --noEmit",
+     "lint": "bunx eslint src/**/*.ts",
+     "lint:fix": "bunx eslint src/**/*.ts --fix"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",

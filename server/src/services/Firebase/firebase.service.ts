@@ -34,7 +34,7 @@ export class FirebaseService {
   constructor() {
     this.db = firebaseAdmin.firestore;
 
-    this.configureFirestore();
+    //this.configureFirestore();
   }
 
   private configureFirestore(): void {

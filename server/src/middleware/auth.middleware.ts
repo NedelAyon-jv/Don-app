@@ -1,4 +1,4 @@
-import type { NextFunction, Request } from "express";
+import type { NextFunction, Request, Response } from "express";
 import {
   AppError,
   AuthenticationError,

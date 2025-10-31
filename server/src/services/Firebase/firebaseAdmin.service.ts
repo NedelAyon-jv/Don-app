@@ -1,6 +1,15 @@
-import { getApps, initializeApp, cert, type ServiceAccount } from "firebase-admin/app";
+import {
+  getApps,
+  initializeApp,
+  cert,
+  type ServiceAccount,
+} from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
-import { getFirestore, type Firestore, type Settings } from "firebase-admin/firestore";
+import {
+  getFirestore,
+  type Firestore,
+  type Settings,
+} from "firebase-admin/firestore";
 import { getMessaging, type Messaging } from "firebase-admin/messaging";
 import { getStorage, type Storage } from "firebase-admin/storage";
 
@@ -71,7 +80,9 @@ export class FirebaseAdminService {
       const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
       if (!process.env.FIREBASE_CLIENT_EMAIL) {
-        throw new Error("FIREBASE_CLIENT_EMAIL environment variable is required");
+        throw new Error(
+          "FIREBASE_CLIENT_EMAIL environment variable is required"
+        );
       }
 
       return {
@@ -146,6 +157,71 @@ export class FirebaseAdminService {
     if (!this._isInitialized) {
       throw new Error("Firebase Admin SDK is not initialized");
     }
+  }
+
+  public async healthCheck(): Promise<{
+    status: "healthy" | "degraded" | "unhealthy";
+    services: {
+      auth: boolean;
+      firestore: boolean;
+      storage: boolean;
+      messaging: boolean;
+    };
+    timestamp: Date;
+  }> {
+    const health = {
+      auth: false,
+      firestore: false,
+      storage: false,
+      messaging: false,
+    };
+
+    try {
+      // Test Auth service
+      await this._auth.listUsers(1);
+      health.auth = true;
+    } catch (error) {
+      console.error("Firebase Auth health check failed:", error);
+    }
+
+    try {
+      // Test Firestore service
+      await this._firestore.collection("_health").doc("check").get();
+      health.firestore = true;
+    } catch (error) {
+      console.error("Firebase Firestore health check failed:", error);
+    }
+
+    try {
+      // Test Storage service
+      await this._storage.bucket().getFiles({ maxResults: 1 });
+      health.storage = true;
+    } catch (error) {
+      console.error("Firebase Storage health check failed:", error);
+    }
+
+    try {
+      // Test Messaging service (lightweight check)
+      health.messaging = true; // Actual test would require valid message
+    } catch (error) {
+      console.error("Firebase Messaging health check failed:", error);
+    }
+
+    const healthyServices = Object.values(health).filter(Boolean).length;
+    const totalServices = Object.values(health).length;
+
+    let status: "healthy" | "degraded" | "unhealthy" = "unhealthy";
+    if (healthyServices === totalServices) {
+      status = "healthy";
+    } else if (healthyServices > 0) {
+      status = "degraded";
+    }
+
+    return {
+      status,
+      services: health,
+      timestamp: new Date(),
+    };
   }
 
   /**

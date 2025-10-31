@@ -38,6 +38,7 @@ export const BaseUserSchema = object({
     average: number(),
     count: number(),
   }),
+  role: string(),
   isVerified: boolean(),
 });
 
@@ -97,14 +98,6 @@ export const UserRegistrationSchema = object({
     string("Phone must be a string"),
     regex(phoneRegex, "Please enter a valid phone number"),
     transform((phone) => phone.replace(/\s+/g, "").trim())
-  ),
-
-  type: pipe(
-    string("Type must be a string"),
-    union(
-      [literal("admin"), literal("user"), literal("donationCenter")],
-      "Type must be one of: admin, user, donationCenter"
-    )
   ),
 });
 
@@ -188,7 +181,7 @@ export const UserUpdateSchema = object({
       count: pipe(number("Rating count must be a number")),
     })
   ),
-  type: optional(
+  role: optional(
     pipe(
       string("Type must be a string"),
       union(

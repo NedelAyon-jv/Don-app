@@ -30,7 +30,7 @@ export class UserService {
    * @throws {Error} VALIDATION_ERROR with field details if input validation fails
    * @throws {Error} If user with same email/username exists or database operation fails
    */
-  static async createsUer(input: unknown): Promise<string> {
+  static async createsUser(input: unknown): Promise<string> {
     try {
       const result = safeParse(UserRegistrationSchema, input);
 
@@ -64,7 +64,7 @@ export class UserService {
           latitude: 0,
           longitude: 0,
         },
-        type: validatedData.type,
+        role: "user",
         isVerified: false,
       };
 
@@ -389,6 +389,70 @@ export class UserService {
   }
 
   /**
+   * Gets users within a specified radius of a geographic location.
+   * Note: This performs client-side filtering after fetching from Firestore.
+   *
+   * @param latitude - Center point latitude
+   * @param longitude - Center point longitude
+   * @param radiusKm - Search radius in kilometers (default: 10)
+   * @param limit - Maximum number of users to return (default: 50)
+   * @returns Array of PublicUser objects within the specified radius
+   */
+  static async getUserNearLocation(
+    latitude: number,
+    longitude: number,
+    radiusKm: number = 10,
+    limit: number = 50
+  ): Promise<PublicUser[]> {
+    try {
+      // THIS IS FROM CHAT GPT I'NOT SURE THIS IS GOING TO WORK
+      const earthRadiusKm = 6371;
+      const latDelta = (radiusKm / earthRadiusKm) * (180 / Math.PI);
+      const lonDelta =
+        ((radiusKm / earthRadiusKm) * (180 / Math.PI)) /
+        Math.cos((latitude * Math.PI) / 180);
+
+      const minLat = latitude - latDelta;
+      const maxLat = latitude + latDelta;
+      const minLon = longitude - lonDelta;
+      const maxLon = longitude + lonDelta;
+
+      const users = await firestoreService.query<User>(this.COLLECTION_NAME, {
+        where: ["location", "!=", null],
+        limit: limit * 2,
+      });
+
+      const nearbyUsers = users
+        .filter((user) => {
+          if (!user.location) return false;
+
+          const distance = this.calculateHaversineDistance(
+            latitude,
+            longitude,
+            user.location.latitude,
+            user.location.longitude
+          );
+
+          return distance <= radiusKm;
+        })
+        .slice(0, limit);
+
+      const publicUsers: PublicUser[] = [];
+      for (const user of nearbyUsers) {
+        const result = safeParse(PublicUserSchema, user);
+        if (result.success) {
+          publicUsers.push(result.output);
+        }
+      }
+
+      return publicUsers;
+    } catch (error) {
+      console.error("Failed to get users near location: ", error);
+      throw error;
+    }
+  }
+
+  /**
    * Searches for users by username or full name.
    *
    * @param query - Search query string
@@ -505,5 +569,47 @@ export class UserService {
     if (existingUser && existingUser.id !== excludeUserId) {
       throw new Error("USERNAME_ALREADY_EXISTS");
     }
+  }
+
+  /**
+   * Calculates distance between two geographic points using Haversine formula.
+   *
+   * @param lat1 - First point latitude
+   * @param lon1 - First point longitude
+   * @param lat2 - Second point latitude
+   * @param lon2 - Second point longitude
+   * @returns Distance in kilometers
+   */
+  private static calculateHaversineDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) *
+        Math.cos(this.deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in kilometers
+
+    return distance;
+  }
+
+  /**
+   * Converts degrees to radians.
+   *
+   * @param deg - Angle in degrees
+   * @returns Angle in radians
+   */
+  private static deg2rad(deg: number): number {
+    return deg * (Math.PI / 180);
   }
 }

@@ -24,6 +24,23 @@ export class AuthController {
   );
 
   /**
+   * Handles admin user registration request.
+   * Creates a new admin user account with elevated privileges.
+   *
+   * @route POST /admin/register
+   * @returns AuthResponse with admin user data and tokens
+   */
+  static registerAdmin = asyncHandler(async (req: Request, res: Response) => {
+    const authResponse = await UserService.createsAdmin(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: authResponse,
+      message: "Admin user registered successfully",
+    });
+  });
+
+  /**
    * Handles user authentication request.
    * Verifies credentials and returns authentication tokens.
    *

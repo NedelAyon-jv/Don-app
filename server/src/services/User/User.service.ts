@@ -78,6 +78,64 @@ export class UserService {
     }
   }
 
+    /**
+   * Creates a new admin with validated registration data.
+   *
+   * @param input - Raw user registration data to validate
+   * @returns Promise resolving to the created user's ID
+   *
+   * @throws {Error} VALIDATION_ERROR with field details if input validation fails
+   * @throws {Error} If user with same email/username exists or database operation fails
+   * THIS COULD CHANGE IN CASE ANOTHER NECESSARY ACTION TO CREATE A USER ADMIN IS REQUIRED
+   */
+  static async createsAdmin(input: unknown): Promise<string> {
+    try {
+      const result = safeParse(UserRegistrationSchema, input);
+
+      if (!result.success) {
+        const errors = result.issues.map((issue) => ({
+          filed: issue.path?.map((p) => p.key).join(".") || "body",
+          message: issue.message,
+        }));
+
+        throw new Error(`VALIDATION_ERROR: ${JSON.stringify(errors)}`);
+      }
+
+      const validatedData = result.output;
+
+      await this.checkExitingUser(validatedData.email, validatedData.username);
+      const hashedPassword = await hash(validatedData.password, 12);
+
+      const userData = {
+        email: validatedData.email,
+        password: hashedPassword,
+        username: validatedData.username,
+        fullname: validatedData.fullname,
+        phone: validatedData.phone,
+        bio: "",
+        profilePicture: "",
+        rating: {
+          average: 0,
+          count: 0,
+        },
+        location: {
+          latitude: 0,
+          longitude: 0,
+        },
+        role: "admin",
+        isVerified: false,
+      };
+
+      return await firestoreService.create<User>(
+        this.COLLECTION_NAME,
+        userData
+      );
+    } catch (error) {
+      console.error("User creation failed:", error);
+      throw error;
+    }
+  }
+
   /**
    * ================================================
    *                       UPDATE

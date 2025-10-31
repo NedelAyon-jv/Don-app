@@ -61,6 +61,54 @@ router.post(
 );
 
 /**
+ * Registers a new admin user account.
+ *
+ * @route POST /register/admin
+ * @rateLimit Auth-specific (5 requests per 15 minutes)
+ * @body UserRegistrationSchema
+ *
+ * @example
+ * // Request
+ * POST /users/register/admin
+ * {
+ *   "email": "admin@example.com",
+ *   "password": "secureAdminPassword123",
+ *   "username": "adminuser",
+ *   "fullname": "Admin User",
+ *   "phone": "+1234567890"
+ * }
+ *
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "user": {
+ *       "id": "admin123",
+ *       "email": "admin@example.com",
+ *       "username": "adminuser",
+ *       "fullname": "Admin User",
+ *       "isVerified": true,
+ *       "role": "admin"
+ *     },
+ *     "token": {
+ *       "accessToken": "eyJ...",
+ *       "refreshToken": "eyJ...",
+ *       "tokenType": "Bearer",
+ *       "expiresIn": 900
+ *     }
+ *   },
+ *   "message": "Admin user registered successfully"
+ * }
+ */
+router.post(
+  "/register/admin",
+  rateLimit.auth,
+  auth.admin,
+  validate.body(UserRegistrationSchema),
+  asyncHandler(AuthController.registerAdmin)
+);
+
+/**
  * Authenticates a user and returns access tokens.
  *
  * @route POST /login

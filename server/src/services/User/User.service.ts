@@ -685,4 +685,13 @@ export class UserService {
   private static deg2rad(deg: number): number {
     return deg * (Math.PI / 180);
   }
+
+  private static isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
 }

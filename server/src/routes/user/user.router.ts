@@ -7,9 +7,7 @@ import {
   validate,
 } from "../../middleware";
 import { UserController } from "../../controllers/user/user.controller";
-import {
-  UserUpdateSchema,
-} from "../../models/schema/user";
+import { UserUpdateSchema } from "../../models/schema/user";
 import {
   string,
   object,
@@ -21,6 +19,8 @@ import {
   maxValue,
   transform,
 } from "valibot";
+import { multerConfig } from "../../config/multer.config";
+import { upload } from "../../middleware/upload.middleware";
 
 const router = Router();
 
@@ -63,7 +63,11 @@ router.put(
   "/profile",
   auth.required,
   rateLimit.user,
-  validate.body(UserUpdateSchema),
+  multerConfig.single("image"), 
+  upload.sanitizeFilenames, 
+  upload.profilePicture, 
+  upload.optimizeImages, 
+  validate.body(UserUpdateSchema), 
   asyncHandler(UserController.updateProfile)
 );
 

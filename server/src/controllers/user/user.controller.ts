@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../../middleware";
 import { UserService } from "../../services/User/User.service";
 import { AuthService } from "../../services/User/Auth.service";
+import { s3Service } from "../../services/AWS/s3.service";
 
 export class UserController {
   static getProfile = asyncHandler(async (req: Request, res: Response) => {
@@ -40,8 +41,46 @@ export class UserController {
   static updateProfile = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const updates = req.body;
+    const file = req.file; // The uploaded image file
 
-    await UserService.updateUser(userId, updates);
+    let imageUrl = updates.imageUrl; // Existing image URL if provided
+
+    // If a new file was uploaded, process it
+    if (file) {
+      try {
+        // Upload to S3
+        const uploadResult = await s3Service.uploadFile(
+          file.buffer,
+          userId,
+          file.originalname,
+          file.mimetype,
+          "profile-pictures"
+        );
+
+        imageUrl = uploadResult.url;
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "IMAGE_UPLOAD_FAILED",
+            message: "Failed to upload image",
+          },
+        });
+      }
+    }
+
+    // Prepare updates for Firebase
+    const firebaseUpdates: any = { ...updates };
+
+    // Remove the image file from updates (it's not a Firebase field)
+    delete firebaseUpdates.image;
+
+    // Add the image URL if we have one (either existing or new upload)
+    if (imageUrl) {
+      firebaseUpdates.profilePicture = imageUrl;
+    }
+
+    await UserService.updateUser(userId, firebaseUpdates);
 
     const updatedUser = await UserService.getUserById(userId);
 

@@ -102,7 +102,7 @@ export class UserController {
 
   static getPublicProfile = asyncHandler(
     async (req: Request, res: Response) => {
-      const userId = req.user!.id;
+      const userId = req.params.id || "";
 
       const publicProfile = await UserService.getPublicProfile(userId);
       if (!publicProfile) {
@@ -125,7 +125,7 @@ export class UserController {
   );
 
   static searchUser = asyncHandler(async (req: Request, res: Response) => {
-    const { q, limit = 20 } = req.query;
+    const { q, limit = 20 } = (req as any).validatedQuery;
 
     const users = await UserService.searchUser(q as string, Number(limit));
 

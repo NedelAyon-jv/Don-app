@@ -78,7 +78,7 @@ export class UserService {
     }
   }
 
-    /**
+  /**
    * Creates a new admin with validated registration data.
    *
    * @param input - Raw user registration data to validate
@@ -516,37 +516,52 @@ export class UserService {
    * @param query - Search query string
    * @param limit - Maximum number of results (default: 20)
    * @returns Promise resolving to array of PublicUser objects
+   * IF IT NEED TO ESCALATE (USER COUNT MORE THAT 200) NEED TO CHANGE THE QUERY METHOD OR APPROACH
    */
   static async searchUser(
     query: string,
     limit: number = 20
   ): Promise<PublicUser[]> {
     try {
-      const usernameResult = await firestoreService.query<User>(
+      const searchQuery = query.toLowerCase().trim();
+      const endQuery = searchQuery + "\uf8ff";
+
+      const allUsers = await firestoreService.query<User>(
         this.COLLECTION_NAME,
         {
-          where: ["username", ">=", query],
-          limit: Math.floor(limit / 2),
+          limit: 200,
           orderBy: { field: "username", direction: "asc" },
         }
       );
 
-      const fullNameResult = await firestoreService.query<User>(
-        this.COLLECTION_NAME,
-        {
-          where: ["username", ">=", query],
-          limit: Math.floor(limit / 2),
-          orderBy: { field: "username", direction: "asc" },
-        }
-      );
+      const scoredUsers = allUsers.map((user) => {
+        let score = 0;
+        const username = user.username?.toLowerCase() || "";
+        const fullname = user.fullname?.toLowerCase() || "";
 
-      const allResults = [...usernameResult, ...fullNameResult];
-      const uniquerResult = allResults.filter(
-        (user, index, self) => index === self.findIndex((u) => u.id === user.id)
-      );
+        // Exact matches get highest score
+        if (username === searchQuery) score += 100;
+        if (fullname === searchQuery) score += 100;
+
+        // Starts with gets high score
+        if (username.startsWith(searchQuery)) score += 50;
+        if (fullname.startsWith(searchQuery)) score += 50;
+
+        // Contains gets medium score
+        if (username.includes(searchQuery)) score += 25;
+        if (fullname.includes(searchQuery)) score += 25;
+
+        return { user, score };
+      });
+
+      const filteredAndSorted = scoredUsers
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map((item) => item.user)
+        .slice(0, limit);
 
       const publicUsers: PublicUser[] = [];
-      for (const user of uniquerResult.slice(0, limit)) {
+      for (const user of filteredAndSorted) {
         const result = safeParse(PublicUserSchema, user);
         if (result.success) {
           publicUsers.push(result.output);

@@ -1,9 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import {
-  safeParse,
-  type BaseSchema,
-  type InferOutput,
-} from "valibot";
+import { safeParse, type BaseSchema, type InferOutput } from "valibot";
 import { ValidationError } from "./error.middleware";
 
 export class ValidationMiddleware {
@@ -29,7 +25,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for query parameters validation using a schema.
@@ -50,13 +46,13 @@ export class ValidationMiddleware {
           );
         }
 
-        req.query = result.output as any;
+        (req as any).validatedQuery = result.output;
         next();
       } catch (error) {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for URL parameters validation using a schema.
@@ -80,7 +76,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for request headers validation using a schema.
@@ -107,7 +103,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for comprehensive request validation across body, query, params, and headers.
@@ -122,7 +118,9 @@ export class ValidationMiddleware {
       params?: BaseSchema<any, any, any>;
       headers?: BaseSchema<any, any, any>;
     }
-  >(schemas: T) => {
+  >(
+    schemas: T
+  ) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const errors: any[] = [];
@@ -176,7 +174,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for file upload validation.
@@ -251,7 +249,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for conditional validation based on request conditions.
@@ -283,7 +281,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Express middleware for input sanitization to prevent XSS attacks.
@@ -337,7 +335,7 @@ export class ValidationMiddleware {
         next(error);
       }
     };
-  }
+  };
 
   /**
    * Formats validation errors into a standardized structure.
@@ -356,7 +354,7 @@ export class ValidationMiddleware {
       code: issue.type,
       value: issue.input,
     }));
-  }
+  };
 
   /**
    * Formats file size in bytes to human-readable string.
@@ -369,7 +367,7 @@ export class ValidationMiddleware {
     if (bytes === 0) return "0 Bytes";
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-  }
+  };
 }
 
 export const validate = {

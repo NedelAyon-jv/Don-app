@@ -1,6 +1,7 @@
+import { Colors } from '@/constants/theme'; // Importa tus colores
 import { FontAwesome } from '@expo/vector-icons';
-import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import React from 'react'; // Asegúrate de importar React
+import { FlatList, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Datos estáticos de los centros de donación
@@ -35,31 +36,35 @@ const donationCenters = [
   },
 ];
 
-// ============== INICIO DE LA CORRECCIÓN ==============
 
 // 1. Define un "interface" para los props
 interface CenterItemProps {
   name: string;
   colonia: string;
-  status: string; // O 'Abierto' | 'Cerrado' para ser más estricto
+  status: string;
   horario: string;
+  theme: typeof Colors.light; // <-- 1. AÑADIMOS EL TEMA A LOS PROPS
 }
 
-// 2. Aplica el tipo a tus props
-//    Asegúrate de importar 'React'
-const CenterItem: React.FC<CenterItemProps> = ({ name, colonia, status, horario }) => (
-  <View style={styles.card}>
+// 2. Aplica el tipo a tus props y recibe 'theme'
+const CenterItem: React.FC<CenterItemProps> = ({ name, colonia, status, horario, theme }) => (
+  // 3. Aplicamos los colores del tema a la tarjeta
+  <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
     <View style={styles.iconContainer}>
-      <FontAwesome name="building" size={24} color="#007bff" />
+      {/* 4. Usamos el color primario del tema */}
+      <FontAwesome name="building" size={24} color={theme.primary} />
     </View>
     <View style={styles.cardContent}>
-      <Text style={styles.cardTitle}>{name}</Text>
-      <Text style={styles.cardColonia}>{colonia}</Text>
-      <Text style={styles.cardHours}>{horario}</Text>
+      {/* 5. Usamos el color de texto del tema */}
+      <Text style={[styles.cardTitle, { color: theme.text }]}>{name}</Text>
+      <Text style={[styles.cardColonia, { color: theme.text }]}>{colonia}</Text>
+      <Text style={[styles.cardHours, { color: theme.text }]}>{horario}</Text>
     </View>
     <View style={styles.statusContainer}>
       <Text style={[
         styles.statusText,
+        // Los colores de estado (Abierto/Cerrado) son funcionales,
+        // así que está bien dejarlos como están.
         status === 'Abierto' ? styles.statusOpen : styles.statusClosed
       ]}>
         {status}
@@ -68,15 +73,20 @@ const CenterItem: React.FC<CenterItemProps> = ({ name, colonia, status, horario 
   </View>
 );
 
-// ============== FIN DE LA CORRECCIÓN ==============
 
 export default function DonationCentersScreen() {
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
+
   return (
-    <SafeAreaView style={styles.container}>
+    // 6. Aplicamos el color de fondo principal
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <FlatList
         data={donationCenters}
-        // TypeScript ahora sabe qué 'item' contiene y no hay error
-        renderItem={({ item }) => <CenterItem {...item} />} 
+        renderItem={({ item }) => (
+          // 7. Pasamos el tema como prop a cada item
+          <CenterItem {...item} theme={theme} />
+        )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
       />
@@ -84,17 +94,17 @@ export default function DonationCentersScreen() {
   );
 }
 
-// ... (El resto de tus estilos)
+// 8. Limpiamos los colores fijos del StyleSheet
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f4f8',
+    // backgroundColor: '#f4f4f8', // <-- Quitado
   },
   listContainer: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff', // <-- Quitado
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -105,6 +115,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1, // <-- Añadido para consistencia
   },
   iconContainer: {
     marginRight: 16,
@@ -115,17 +126,19 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#333',
+    // color: '#333', // <-- Quitado
   },
   cardColonia: {
     fontSize: 15,
-    color: 'gray',
+    // color: 'gray', // <-- Quitado
     marginTop: 2,
+    opacity: 0.8, // <-- Añadido para jerarquía
   },
   cardHours: {
     fontSize: 14,
-    color: '#555',
+    // color: '#555', // <-- Quitado
     marginTop: 4,
+    opacity: 0.9, // <-- Añadido para jerarquía
   },
   statusContainer: {
     marginLeft: 10,
@@ -139,6 +152,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: 'hidden',
   },
+  // Estilos funcionales (verde/rojo) - se quedan
   statusOpen: {
     backgroundColor: '#d4edda',
     color: '#155724',

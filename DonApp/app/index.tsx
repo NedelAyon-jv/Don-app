@@ -3,7 +3,6 @@ import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
 import React, { useMemo, useState } from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -11,7 +10,7 @@ import {
     TextInput,
     TouchableOpacity,
     useColorScheme,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,13 +24,17 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    // Lógica de login (simulada)
+    // --- VALIDACIÓN DESACTIVADA PARA PRUEBAS DE NAVEGACIÓN ---
+    /*
     if (!email || !password) {
       Alert.alert('Campos incompletos', 'Por favor, ingresa correo y contraseña.');
       return;
     }
     console.log('Login con:', email, password);
-    // Si es exitoso, redirige a los tabs
+    */
+    
+    // Si es exitoso (o para pruebas), redirige a los tabs
+    console.log('Navegando a /Tabs...');
     router.replace('/(tabs)');
   };
 
@@ -94,7 +97,7 @@ export default function LoginScreen() {
         </View>
 
         {/* ============================================== */}
-        {/* ==== AQUÍ ESTÁ EL BOTÓN QUE BUSCAS (PASO 3) ==== */}
+        {/* ==== BOTÓN PARA IR A SIGNUP ==== */}
         {/* ============================================== */}
         <TouchableOpacity 
           style={styles.signupContainer} 

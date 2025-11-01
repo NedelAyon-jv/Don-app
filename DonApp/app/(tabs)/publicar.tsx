@@ -1,6 +1,7 @@
+import { Colors } from '@/constants/theme'; // <-- 1. Importar Colores
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react'; // <-- 2. Importar useMemo
 import {
   Alert,
   FlatList,
@@ -11,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme, // <-- 3. Importar useColorScheme
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,37 +21,35 @@ type PostType = 'Donación' | 'Trueque';
 type PostStatus = 'Disponible' | 'No Disponible';
 
 export default function PublishScreen() {
+  // --- 4. Configuración del Tema ---
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
+  // 5. Generar estilos dinámicamente
+  const styles = useMemo(() => createStyles(theme), [theme]); 
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [images, setImages] = useState<string[]>([]); // Almacenará las URIs de las imágenes
+  const [images, setImages] = useState<string[]>([]);
   const [postType, setPostType] = useState<PostType>('Donación');
   const [status, setStatus] = useState<PostStatus>('Disponible');
 
-  // --- Lógica de Imágenes ---
-
+  // --- Lógica de Imágenes (sin cambios) ---
   const pickImage = async () => {
-    // 1. Validar máximo de imágenes
     if (images.length >= 5) {
       Alert.alert('Límite alcanzado', 'Solo puedes subir un máximo de 5 imágenes.');
       return;
     }
-
-    // 2. Pedir permiso
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
       Alert.alert('Permiso requerido', 'Necesitas dar acceso a tu galería para subir imágenes.');
       return;
     }
-
-    // 3. Abrir la galería
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
     });
-
-    // 4. Añadir imagen al estado
     if (!result.canceled && result.assets) {
       setImages([...images, result.assets[0].uri]);
     }
@@ -59,34 +59,21 @@ export default function PublishScreen() {
     setImages(images.filter((imgUri) => imgUri !== uriToRemove));
   };
 
-  // --- Lógica de Publicación ---
-
+  // --- Lógica de Publicación (sin cambios) ---
   const handleSubmit = () => {
-    // Validar mínimo de 1 imagen
     if (images.length === 0) {
       Alert.alert('Error', 'Debes subir al menos 1 imagen.');
       return;
     }
-
     if (!title || !description) {
       Alert.alert('Error', 'El título y la descripción son obligatorios.');
       return;
     }
-
-    // Por ahora, solo mostramos los datos en consola
-    console.log('Publicando...');
-    console.log('Título:', title);
-    console.log('Descripción:', description);
-    console.log('Tipo:', postType);
-    console.log('Estado:', status);
-    console.log('Imágenes:', images);
-
+    console.log('Publicando...', { title, description, postType, status, images });
     Alert.alert('Éxito (Maqueta)', 'Artículo listo para publicar.');
-    // Aquí, en el futuro, llamarías a tu API/backend
   };
 
-  // --- Renderizado de la UI ---
-
+  // --- Renderizado de la UI (con colores de tema) ---
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -96,6 +83,7 @@ export default function PublishScreen() {
         <TextInput
           style={styles.input}
           placeholder="Ej: Silla de oficina en buen estado"
+          placeholderTextColor={theme.text} // <-- Color de tema
           value={title}
           onChangeText={setTitle}
         />
@@ -105,6 +93,7 @@ export default function PublishScreen() {
         <TextInput
           style={styles.inputMultiline}
           placeholder="Describe tu artículo, detalles, condiciones, etc."
+          placeholderTextColor={theme.text} // <-- Color de tema
           value={description}
           onChangeText={setDescription}
           multiline
@@ -115,7 +104,7 @@ export default function PublishScreen() {
         <Text style={styles.label}>Imágenes ({images.length} / 5)</Text>
         <View style={styles.imagePickerContainer}>
           <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-            <FontAwesome name="camera" size={24} color="#007bff" />
+            <FontAwesome name="camera" size={24} color={theme.primary} /> {/* <-- Color de tema */}
             <Text style={styles.imagePickerText}>Añadir Foto</Text>
           </TouchableOpacity>
         </View>
@@ -129,7 +118,8 @@ export default function PublishScreen() {
             <View style={styles.imagePreviewContainer}>
               <Image source={{ uri: item }} style={styles.imagePreview} />
               <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(item)}>
-                <FontAwesome name="times-circle" size={24} color="#e74c3c" />
+                {/* Usamos el color de error del tema */}
+                <FontAwesome name="times-circle" size={24} color={theme.error} /> {/* <-- Color de tema */}
               </TouchableOpacity>
             </View>
           )}
@@ -176,116 +166,123 @@ export default function PublishScreen() {
   );
 }
 
-// --- Estilos ---
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
-  },
-  scrollContainer: {
-    padding: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-  },
-  inputMultiline: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  // --- Estilos de Imágenes ---
-  imagePickerContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  imagePickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#eaf4ff',
-    borderWidth: 1,
-    borderColor: '#007bff',
-    padding: 12,
-    borderRadius: 8,
-  },
-  imagePickerText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#007bff',
-    fontWeight: 'bold',
-  },
-  imagePreviewList: {
-    marginBottom: 10,
-  },
-  imagePreviewContainer: {
-    position: 'relative',
-    marginRight: 10,
-  },
-  imagePreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: 'white',
-    borderRadius: 12,
-  },
-  // --- Estilos de Segmentos (Selectores) ---
-  segmentContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    backgroundColor: '#eee',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  segmentButton: {
-    flex: 1,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentButtonActive: {
-    backgroundColor: '#007bff',
-  },
-  segmentText: {
-    fontSize: 15,
-    color: '#555',
-    fontWeight: '600',
-  },
-  segmentTextActive: {
-    color: '#fff',
-  },
-  // --- Botón de Publicar ---
-  submitButton: {
-    backgroundColor: '#28a745',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 32,
-    marginBottom: 16,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-});
+// --- 6. Estilos dinámicos ---
+// (Creamos una función que recibe el tema)
+const createStyles = (theme: typeof Colors.light) => 
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background, // <-- Color de tema
+    },
+    scrollContainer: {
+      padding: 16,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.text, // <-- Color de tema
+      marginBottom: 8,
+      marginTop: 16,
+    },
+    input: {
+      backgroundColor: theme.card, // <-- Color de tema
+      borderWidth: 1,
+      borderColor: theme.border, // <-- Color de tema
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 15,
+      color: theme.text, // <-- Color de tema
+    },
+    inputMultiline: {
+      backgroundColor: theme.card, // <-- Color de tema
+      borderWidth: 1,
+      borderColor: theme.border, // <-- Color de tema
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 15,
+      height: 100,
+      textAlignVertical: 'top',
+      color: theme.text, // <-- Color de tema
+    },
+    // --- Estilos de Imágenes ---
+    imagePickerContainer: {
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    imagePickerButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.card, // <-- Color de tema
+      borderWidth: 1,
+      borderColor: theme.primary, // <-- Color de tema
+      padding: 12,
+      borderRadius: 8,
+    },
+    imagePickerText: {
+      marginLeft: 10,
+      fontSize: 16,
+      color: theme.primary, // <-- Color de tema
+      fontWeight: 'bold',
+    },
+    imagePreviewList: {
+      marginBottom: 10,
+    },
+    imagePreviewContainer: {
+      position: 'relative',
+      marginRight: 10,
+    },
+    imagePreview: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      backgroundColor: theme.border, // <-- Color de tema
+    },
+    removeImageButton: {
+      position: 'absolute',
+      top: -5,
+      right: -5,
+      backgroundColor: theme.card, // <-- Color de tema
+      borderRadius: 12,
+    },
+    // --- Estilos de Segmentos (Selectores) ---
+    segmentContainer: {
+      flexDirection: 'row',
+      width: '100%',
+      backgroundColor: theme.border, // <-- Color de tema
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    segmentButton: {
+      flex: 1,
+      padding: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    segmentButtonActive: {
+      backgroundColor: theme.primary, // <-- Color de tema
+    },
+    segmentText: {
+      fontSize: 15,
+      color: theme.text, // <-- Color de tema
+      fontWeight: '600',
+      opacity: 0.7,
+    },
+    segmentTextActive: {
+      color: theme.background, // <-- Color de tema
+      opacity: 1,
+    },
+    // --- Botón de Publicar ---
+    submitButton: {
+      backgroundColor: theme.success, // <-- Color de tema (funcional)
+      borderRadius: 8,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 32,
+      marginBottom: 16,
+    },
+    submitButtonText: {
+      color: theme.card, // <-- Color de tema
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+  });

@@ -1,5 +1,14 @@
-import React from 'react';
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Colors } from '@/constants/theme'; // <-- 1. Importar Colores
+import React from 'react'; // Asegúrate de importar React
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useColorScheme, // <-- 2. Importar useColorScheme
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Datos estáticos de los chats (maquetado)
@@ -34,28 +43,43 @@ interface ChatItemProps {
   timestamp: string;
   avatarUrl: string;
   onPress: () => void;
+  theme: typeof Colors.light; // <-- 3. AÑADIMOS EL TEMA A LOS PROPS
 }
 
 // 2. Componente para renderizar cada item de chat
-const ChatItem: React.FC<ChatItemProps> = ({ userName, lastMessage, timestamp, avatarUrl, onPress }) => (
-  <TouchableOpacity style={styles.chatCard} onPress={onPress}>
-    <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+const ChatItem: React.FC<ChatItemProps> = ({ userName, lastMessage, timestamp, avatarUrl, onPress, theme }) => (
+  // 4. Aplicamos colores del tema a la tarjeta
+  <TouchableOpacity 
+    style={[styles.chatCard, { backgroundColor: theme.card, borderBottomColor: theme.border }]} 
+    onPress={onPress}
+  >
+    <Image 
+      source={{ uri: avatarUrl }} 
+      style={[styles.avatar, { backgroundColor: theme.border }]} // <-- Color de fondo de tema
+    />
     <View style={styles.chatContent}>
-      <Text style={styles.userName}>{userName}</Text>
-      <Text style={styles.lastMessage} numberOfLines={1}>{lastMessage}</Text>
+      {/* 5. Aplicamos color de texto del tema */}
+      <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
+      <Text style={[styles.lastMessage, { color: theme.text }]} numberOfLines={1}>{lastMessage}</Text>
     </View>
-    <Text style={styles.timestamp}>{timestamp}</Text>
+    <Text style={[styles.timestamp, { color: theme.text }]}>{timestamp}</Text>
   </TouchableOpacity>
 );
 
 export default function ChatsScreen() {
+  // 6. Obtenemos el tema
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
+
   return (
-    <SafeAreaView style={styles.container}>
+    // 7. Aplicamos el color de fondo principal
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <FlatList
         data={chatConversations}
         renderItem={({ item }) => (
           <ChatItem
             {...item}
+            theme={theme} // <-- 8. Pasamos el tema a cada item
             onPress={() => {
               // Aquí irá la lógica para navegar a la pantalla de chat individual
               console.log('Abriendo chat con:', item.userName);
@@ -69,23 +93,23 @@ export default function ChatsScreen() {
   );
 }
 
-// Estilos para la pantalla de chats
+// 9. Limpiamos los colores fijos del StyleSheet
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9', // Un fondo ligeramente diferente
+    // backgroundColor: '#f9f9f9', // <-- Quitado
   },
   listContainer: {
     paddingTop: 8,
   },
   chatCard: {
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff', // <-- Quitado
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    // borderBottomColor: '#eee', // <-- Quitado
   },
   avatar: {
     width: 50,
@@ -100,17 +124,19 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#333',
+    // color: '#333', // <-- Quitado
   },
   lastMessage: {
     fontSize: 15,
-    color: 'gray',
+    // color: 'gray', // <-- Quitado
     marginTop: 2,
+    opacity: 0.8, // <-- Añadido para jerarquía
   },
   timestamp: {
     fontSize: 13,
-    color: 'gray',
+    // color: 'gray', // <-- Quitado
     alignSelf: 'flex-start', // Se alinea arriba
     paddingTop: 2,
+    opacity: 0.8, // <-- Añadido para jerarquía
   },
 });

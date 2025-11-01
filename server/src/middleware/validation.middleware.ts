@@ -13,7 +13,7 @@ export class ValidationMiddleware {
    * @param schema - Validation schema to validate against
    * @returns Express middleware function
    */
-  static validateBody<T extends BaseSchema<any, any, any>>(schema: T) {
+  static validateBody = <T extends BaseSchema<any, any, any>>(schema: T) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const result = safeParse(schema, req.body);
@@ -37,7 +37,7 @@ export class ValidationMiddleware {
    * @param schema - Validation schema to validate against
    * @returns Express middleware function
    */
-  static validateQuery<T extends BaseSchema<any, any, any>>(schema: T) {
+  static validateQuery = <T extends BaseSchema<any, any, any>>(schema: T) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const result = safeParse(schema, req.query);
@@ -64,7 +64,7 @@ export class ValidationMiddleware {
    * @param schema - Validation schema to validate against
    * @returns Express middleware function
    */
-  static validateParams<T extends BaseSchema<any, any, any>>(schema: T) {
+  static validateParams = <T extends BaseSchema<any, any, any>>(schema: T) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const result = safeParse(schema, req.params);
@@ -88,7 +88,7 @@ export class ValidationMiddleware {
    * @param schema - Validation schema to validate against
    * @returns Express middleware function
    */
-  static validateHeaders<T extends BaseSchema<any, any, any>>(schema: T) {
+  static validateHeaders = <T extends BaseSchema<any, any, any>>(schema: T) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const result = safeParse(schema, req.headers);
@@ -115,14 +115,14 @@ export class ValidationMiddleware {
    * @param schemas - Object containing schemas for different request parts
    * @returns Express middleware function
    */
-  static validateRequest<
+  static validateRequest = <
     T extends {
       body?: BaseSchema<any, any, any>;
       query?: BaseSchema<any, any, any>;
       params?: BaseSchema<any, any, any>;
       headers?: BaseSchema<any, any, any>;
     }
-  >(schemas: T) {
+  >(schemas: T) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const errors: any[] = [];
@@ -184,12 +184,12 @@ export class ValidationMiddleware {
    * @param options - File validation options
    * @returns Express middleware function
    */
-  static validateFiles(options: {
+  static validateFiles = (options: {
     maxCount?: number;
     maxSize?: number;
     allowedMimeTypes?: string[];
     required?: boolean;
-  }) {
+  }) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const files = (req as Request & { files?: any[] }).files;
@@ -261,11 +261,11 @@ export class ValidationMiddleware {
    * @param part - Request part to validate (default: "body")
    * @returns Express middleware function
    */
-  static validateIf<T extends BaseSchema<any, any, any>>(
+  static validateIf = <T extends BaseSchema<any, any, any>>(
     condition: (req: Request) => boolean,
     schema: T,
     part: "body" | "query" | "params" = "body"
-  ) {
+  ) => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         if (condition(req)) {
@@ -291,7 +291,7 @@ export class ValidationMiddleware {
    * @param fields - Specific fields to sanitize or "all" for entire request
    * @returns Express middleware function
    */
-  static sanitizeInput(fields: string[] | "all" = "all") {
+  static sanitizeInput = (fields: string[] | "all" = "all") => {
     return (req: Request, res: Response, next: NextFunction) => {
       try {
         const sanitize = (obj: any): any => {
@@ -346,10 +346,10 @@ export class ValidationMiddleware {
    * @param source - Source of the validation (body, query, params, headers)
    * @returns Formatted validation errors array
    */
-  private static formatValidationErrors(
+  private static formatValidationErrors = (
     issues: any[],
     source: string = "body"
-  ) {
+  ) => {
     return issues.map((issue) => ({
       field: issue.path?.map((p: any) => p.key).join(".") || source,
       message: issue.message,
@@ -364,7 +364,7 @@ export class ValidationMiddleware {
    * @param bytes - File size in bytes
    * @returns Formatted file size string (e.g., "2.5 MB")
    */
-  private static formatFileSize(bytes: number): string {
+  private static formatFileSize = (bytes: number): string => {
     const sizes = ["Bytes", "KB", "MB", "GB"];
     if (bytes === 0) return "0 Bytes";
     const i = Math.floor(Math.log(bytes) / Math.log(1024));

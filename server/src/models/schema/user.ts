@@ -16,6 +16,7 @@ import {
   string,
   transform,
   union,
+  url,
 } from "valibot";
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -148,7 +149,13 @@ export const UserUpdateSchema = object({
       transform((bio) => bio.trim())
     )
   ),
-  profilePicture: optional(any()),
+  profilePicture: optional(
+    pipe(
+      string(),
+      url("Profile picture must be a valid URL"),
+      transform((url) => url.trim())
+    )
+  ),
   location: optional(
     object({
       latitude: pipe(
@@ -212,4 +219,4 @@ export const PasswordChangeSchema = object({
 
 export const EmailVerifySchema = object({
   userId: string("User id required"),
-})
+});

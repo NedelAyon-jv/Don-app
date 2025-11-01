@@ -5,7 +5,7 @@ import {
   UserRegistrationSchema,
 } from "../../models/schema/user";
 import { AuthController } from "../../controllers/user/auth.controller";
-import { LoginSchema } from "../../models/schema/auth";
+import { LoginSchema, RefreshTokenSchema } from "../../models/schema/auth";
 
 const router = Router();
 
@@ -148,6 +148,38 @@ router.post(
   rateLimit.auth,
   validate.body(LoginSchema),
   asyncHandler(AuthController.login)
+);
+
+/**
+ * Refreshes authentication tokens using a valid refresh token.
+ *
+ * @route POST /refresh-token
+ * @authentication Required (uses refresh token from body)
+ *
+ * @example
+ * // Request
+ * POST /auth/refresh-token
+ * {
+ *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ * }
+ *
+ * // Response
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+ *     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+ *     "tokenType": "Bearer",
+ *     "expiresIn": 900
+ *   },
+ *   "message": "Tokens refreshed successfully"
+ * }
+ */
+router.post(
+  "/refresh-token",
+  rateLimit.general,
+  validate.body(RefreshTokenSchema),
+  asyncHandler(AuthController.refreshToken)
 );
 
 /**

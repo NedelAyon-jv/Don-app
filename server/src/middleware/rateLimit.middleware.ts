@@ -251,7 +251,7 @@ export const rateLimit = {
 
   auth: RateLimitMiddleware.memoryRateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 request per window
+    maxRequests: 1000, // 1000 request per window
     message: "Too many authentication attempts, please try again later.",
   }),
 

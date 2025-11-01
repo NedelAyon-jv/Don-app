@@ -202,11 +202,6 @@ export class JWTService {
 
       const validatedPayload = validation.output;
 
-      // Check toke type
-      if (validatedPayload.type !== "access") {
-        throw new Error("INVALID_TOKEN_TYPE");
-      }
-
       // Check if token is blacklisted
       if (tokenBlacklist.has(validatedPayload.jti.toString())) {
         throw new Error("TOKEN_REVOKED");

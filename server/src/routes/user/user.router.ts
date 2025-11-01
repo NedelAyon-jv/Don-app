@@ -69,37 +69,6 @@ router.put(
 );
 
 /**
- * Changes the authenticated user's password.
- *
- * @route PATCH /profile/password
- * @authentication Required
- * @rateLimit Auth-specific (5 requests per 15 minutes)
- * @body PasswordChangeSchema
- *
- * @example
- * // Request
- * PATCH /profile/password
- * Authorization: Bearer <token>
- * {
- *   "currentPassword": "oldPassword123",
- *   "newPassword": "newSecurePassword456"
- * }
- *
- * // Response
- * {
- *   "success": true,
- *   "message": "Password updated successfully"
- * }
- */
-router.patch(
-  "/profile/password",
-  auth.required,
-  rateLimit.auth,
-  validate.body(PasswordChangeSchema),
-  asyncHandler(UserController.changePassword)
-);
-
-/**
  * ================================================
  *                       GETS
  * ================================================

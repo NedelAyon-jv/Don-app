@@ -13,11 +13,11 @@ import {
 interface TokenConfig {
   accessToken: {
     secret: string;
-    expireIn: string;
+    expiresIn: string;
   };
   refreshToken: {
     secret: string;
-    expireIn: string;
+    expiresIn: string;
   };
 }
 
@@ -28,11 +28,11 @@ export class JWTService {
   private static config: TokenConfig = {
     accessToken: {
       secret: process.env.JWT_ACCESS_SECRET!,
-      expireIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
+      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
     },
     refreshToken: {
       secret: process.env.JWT_REFRESH_SECRET!,
-      expireIn: process.env.JET_REFRESH_EXPIRES_IN || "7d",
+      expiresIn: process.env.JET_REFRESH_EXPIRES_IN || "7d",
     },
   };
 
@@ -88,7 +88,7 @@ export class JWTService {
       iat: Math.floor(Date.now() / 1000),
       exp:
         Math.floor(Date.now() / 1000) +
-        this.parseExpiration(this.config.accessToken.expireIn),
+        this.parseExpiration(this.config.accessToken.expiresIn),
       jti: this.generateTokenId(),
     };
 
@@ -97,7 +97,7 @@ export class JWTService {
       throw new Error("INVALID_TOKEN_PAYLOAD");
     }
 
-    return sign(tokenPayload, this.config.refreshToken.secret, {
+    return sign(tokenPayload, this.config.accessToken.secret, {
       algorithm: "HS256",
       issuer: "don-app",
       audience: "don-app-users",
@@ -121,7 +121,7 @@ export class JWTService {
       iat: Math.floor(Date.now() / 1000),
       exp:
         Math.floor(Date.now() / 1000) +
-        this.parseExpiration(this.config.refreshToken.expireIn),
+        this.parseExpiration(this.config.refreshToken.expiresIn),
       jti: this.generateTokenId(),
     };
 
@@ -158,7 +158,7 @@ export class JWTService {
       accessToken,
       refreshToken,
       tokenType: "Bearer",
-      expireIn: this.parseExpiration(this.config.accessToken.expireIn),
+      expiresIn: this.parseExpiration(this.config.accessToken.expiresIn),
     };
 
     const validation = safeParse(AuthTokenSchema, authToken);

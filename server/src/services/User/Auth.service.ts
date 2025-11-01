@@ -57,8 +57,6 @@ export class AuthService {
           email: user.email,
           username: user.username,
           fullname: user.fullname,
-          isVerified: user.isVerified,
-          profilePicture: user.profilePicture,
         },
         token,
       };
@@ -112,7 +110,7 @@ export class AuthService {
         throw new Error("INVALID_CREDENTIALS");
       }
 
-      const tokens = JWTService.generateAuthToken(user);
+      const token = JWTService.generateAuthToken(user);
 
       const authResponse = {
         user: {
@@ -120,10 +118,8 @@ export class AuthService {
           email: user.email,
           username: user.username,
           fullname: user.fullname,
-          isVerified: user.isVerified,
-          profilePicture: user.profilePicture,
         },
-        tokens,
+        token,
       };
 
       const responseResult = safeParse(AuthResponseSchema, authResponse);

@@ -22,7 +22,7 @@ export const AuthResponseSchema = object({
         id: string(),
         email: string(),
         username: string(),
-        fullName: string(),
+        fullname: string(),
     }),
     token: AuthTokenSchema
 });

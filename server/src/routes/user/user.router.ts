@@ -162,7 +162,7 @@ router.get(
  * }
  */
 router.get(
-  "/:id",
+  "/find/:id",
   auth.optional,
   cache.medium,
   validate.params(object({ id: string() })),
@@ -212,7 +212,15 @@ router.get(
   validate.query(
     object({
       q: pipe(string(), minLength(1)),
-      limit: optional(pipe(number(), minValue(1), maxValue(50))),
+      limit: optional(
+        pipe(
+          string(),
+          transform((val) => parseInt(val, 10)),
+          number(),
+          minValue(1),
+          maxValue(50)
+        )
+      ),
     })
   ),
   asyncHandler(UserController.searchUser)

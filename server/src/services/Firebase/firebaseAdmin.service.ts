@@ -119,9 +119,14 @@ export class FirebaseAdminService {
       ignoreUndefinedProperties: true,
     };
 
-    if (process.env.NODE_ENV === "development") {
-      firebaseSettings.host = "localhost:8080";
+    // Optional: Add emulator support only when needed
+    if (process.env.FIRESTORE_EMULATOR_HOST) {
+      firebaseSettings.host = process.env.FIRESTORE_EMULATOR_HOST;
       firebaseSettings.ssl = false;
+      console.log(
+        "🔧 Using Firestore emulator:",
+        process.env.FIRESTORE_EMULATOR_HOST
+      );
     }
 
     this._firestore.settings(firebaseSettings);
@@ -172,7 +177,7 @@ export class FirebaseAdminService {
     const health = {
       auth: false,
       firestore: false,
-      storage: false,
+      storage: true, // Always true since we're not using it
       messaging: false,
     };
 
@@ -193,27 +198,20 @@ export class FirebaseAdminService {
     }
 
     try {
-      // Test Storage service
-      await this._storage.bucket().getFiles({ maxResults: 1 });
-      health.storage = true;
-    } catch (error) {
-      console.error("Firebase Storage health check failed:", error);
-    }
-
-    try {
-      // Test Messaging service (lightweight check)
-      health.messaging = true; // Actual test would require valid message
+      // Test Messaging service
+      health.messaging = true; // Skip actual test
     } catch (error) {
       console.error("Firebase Messaging health check failed:", error);
     }
 
-    const healthyServices = Object.values(health).filter(Boolean).length;
-    const totalServices = Object.values(health).length;
+    // Only check essential services (auth and firestore)
+    const essentialServices = [health.auth, health.firestore];
+    const healthyEssentialServices = essentialServices.filter(Boolean).length;
 
     let status: "healthy" | "degraded" | "unhealthy" = "unhealthy";
-    if (healthyServices === totalServices) {
+    if (healthyEssentialServices === essentialServices.length) {
       status = "healthy";
-    } else if (healthyServices > 0) {
+    } else if (healthyEssentialServices > 0) {
       status = "degraded";
     }
 

@@ -8,7 +8,6 @@ import {
 } from "../../middleware";
 import { UserController } from "../../controllers/user/user.controller";
 import {
-  PasswordChangeSchema,
   UserUpdateSchema,
 } from "../../models/schema/user";
 import {

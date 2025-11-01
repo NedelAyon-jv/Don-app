@@ -100,9 +100,7 @@ export class AuthController {
    * @returns Success message
    */
   static verifyEmail = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.id;
-
-    await AuthService.verifyEmail(userId);
+    await AuthService.verifyEmail(req.body!.userId);
 
     res.json({
       success: true,

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asyncHandler, auth, rateLimit, validate } from "../../middleware";
 import {
+  EmailVerifySchema,
   PasswordChangeSchema,
   UserRegistrationSchema,
 } from "../../models/schema/user";
@@ -220,7 +221,8 @@ router.post("/logout", auth.required, asyncHandler(AuthController.logout));
  */
 router.post(
   "/verify-email",
-  auth.required,
+  auth.admin,
+  validate.body(EmailVerifySchema),
   asyncHandler(AuthController.verifyEmail)
 );
 
@@ -276,7 +278,8 @@ router.post("/me", auth.required, asyncHandler(AuthController.getCurrentUser));
  */
 router.post(
   "/change-password",
-  rateLimit.auth,
+  rateLimit.general,
+  auth.required,
   validate.body(PasswordChangeSchema),
   asyncHandler(AuthController.resetPassword)
 );

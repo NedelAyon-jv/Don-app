@@ -209,3 +209,7 @@ export const PasswordChangeSchema = object({
     )
   ),
 });
+
+export const EmailVerifySchema = object({
+  userId: string("User id required"),
+})

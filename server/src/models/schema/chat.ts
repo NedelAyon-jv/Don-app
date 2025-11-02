@@ -15,7 +15,7 @@ export interface ChatMessage {
 export interface Conversation {
   id: string;
   participants: string[];
-  participantsDetails?: ParticipantDetail[];
+  participantDetails?: ParticipantDetail[];
   lastMessage?: ChatMessage;
   lastMessageAt: Date;
   createdAt: Date;
@@ -31,7 +31,7 @@ export interface ParticipantDetail {
   userId: string;
   joinedAt: Date;
   role: "admin" | "member";
-  lastReadMessageId: string;
+  lastReadMessageId?: string;
 }
 
 export interface ConversationSummary {

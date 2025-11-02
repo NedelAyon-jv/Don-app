@@ -9,6 +9,7 @@ import type {
   ExchangeSchema,
   PRIORITIES,
   PUBLICATION_TYPES,
+  PublicationResponseSchema,
   UpdatePublicationSchema,
 } from "../schema/publication";
 
@@ -22,6 +23,7 @@ export type BasePublication = InferOutput<typeof BasePublicationSchema>;
 export type DonationOffer = InferOutput<typeof DonationOfferSchema>;
 export type DonationRequest = InferOutput<typeof DonationRequestSchema>;
 export type Exchange = InferOutput<typeof ExchangeSchema>;
+export type PublicationResponse = InferOutput<typeof PublicationResponseSchema>;
 export type Publication = DonationOffer | DonationRequest | Exchange;
 
 export type CreatePublicationInput = InferInput<typeof CreatePublicationSchema>;

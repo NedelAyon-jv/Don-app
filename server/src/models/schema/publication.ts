@@ -73,7 +73,7 @@ export const BasePublicationSchema = object({
     literal(CATEGORIES.SPORTS),
     literal(CATEGORIES.OTHER),
   ]),
-  image: array(string()),
+  images: array(string()),
   location: object({
     latitude: pipe(number(), minValue(-90), maxValue(90)),
     longitude: pipe(number(), minValue(-180), maxValue(180)),
@@ -165,7 +165,7 @@ export const CreatePublicationSchema = object({
     literal(CATEGORIES.SPORTS),
     literal(CATEGORIES.OTHER),
   ]),
-  images: optional(array(string())),
+  images: array(string()),
   location: object({
     latitude: pipe(number(), minValue(-90), maxValue(90)),
     longitude: pipe(number(), minValue(-180), maxValue(180)),

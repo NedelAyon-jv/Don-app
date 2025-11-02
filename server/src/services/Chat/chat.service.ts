@@ -16,7 +16,18 @@ export class ChatService {
    *                  CONVERSATION
    * ================================================
    */
-
+  /**
+   * Creates a new conversation or returns existing direct conversation.
+   *
+   * @param creatorId - ID of the user creating the conversation
+   * @param participants - Array of participant user IDs
+   * @param type - Conversation type: "direct" or "group" (default: "direct")
+   * @param name - Optional name for group conversations
+   * @param description - Optional description for group conversations
+   * @returns Conversation ID (new or existing)
+   *
+   * @throws {Error} NUMBER_OF_MEMBERS_EXCEED_LIMIT if direct conversation has more than 2 participants
+   */
   async createConversation(
     creatorId: string,
     participants: string[],
@@ -70,6 +81,12 @@ export class ChatService {
     );
   }
 
+  /**
+   * Retrieves a conversation by its ID.
+   *
+   * @param conversationId - ID of the conversation to retrieve
+   * @returns Conversation object or null if not found
+   */
   async getConversation(conversationId: string): Promise<Conversation | null> {
     return await firestoreService.getById<Conversation>(
       this.CONVERSATIONS_COLLECTION,
@@ -77,6 +94,12 @@ export class ChatService {
     );
   }
 
+  /**
+   * Retrieves all conversations for a user with summary information.
+   *
+   * @param userId - User ID to get conversations for
+   * @returns Array of conversation summaries with unread counts and last messages
+   */
   async getUserConversations(userId: string): Promise<ConversationSummary[]> {
     const conversations = await firestoreService.query<Conversation>(
       this.CONVERSATIONS_COLLECTION,
@@ -107,6 +130,19 @@ export class ChatService {
    * ================================================
    *                    MESSAGE
    * ================================================
+   */
+
+  /**
+   * Sends a message in a conversation.
+   *
+   * @param conversationId - ID of the conversation to send message in
+   * @param senderId - ID of the user sending the message
+   * @param content - Message content (text, image URL, file URL, etc.)
+   * @param messageType - Type of message (default: "text")
+   * @param metadata - Optional additional message metadata
+   * @returns ID of the created message
+   *
+   * @throws {Error} CONVERSATION_NOT_FOUND_OR_USER_NOT_AUTHORIZED if conversation doesn't exist or user is not a participant
    */
   async sendMessage(
     conversationId: string,
@@ -147,6 +183,14 @@ export class ChatService {
     return messageId;
   }
 
+  /**
+   * Retrieves messages from a conversation with pagination.
+   *
+   * @param conversationId - ID of the conversation to get messages from
+   * @param limit - Maximum number of messages to return (default: 50)
+   * @param startAfter - Cursor for pagination (last message ID from previous page)
+   * @returns Array of chat messages, ordered by creation date (newest first)
+   */
   async getConversationMessages(
     conversationId: string,
     limit: number = 50,
@@ -168,6 +212,16 @@ export class ChatService {
     );
   }
 
+  /**
+   * Marks a specific message as read by a user.
+   *
+   * @param conversationId - ID of the conversation containing the message
+   * @param messageId - ID of the message to mark as read
+   * @param userId - ID of the user marking the message as read
+   * @returns Promise that resolves when message is updated
+   *
+   * @throws {Error} MESSAGE_NOT_FOUND if message doesn't exist or doesn't belong to the conversation
+   */
   async markMessageAsRead(
     conversationId: string,
     messageId: string,
@@ -193,6 +247,16 @@ export class ChatService {
     }
   }
 
+  /**
+   * Marks all messages in a conversation as read for a specific user.
+   *
+   * @param conversationId - ID of the conversation to mark messages as read
+   * @param userId - ID of the user marking messages as read
+   * @returns Promise that resolves when all messages are updated
+   *
+   * @example
+   * await chatService.markAllAsRead("conv123", "user123");
+   */
   async markAllAsRead(conversationId: string, userId: string): Promise<void> {
     const allMessages = await firestoreService.query<ChatMessage>(
       this.MESSAGE_COLLECTION,
@@ -217,8 +281,16 @@ export class ChatService {
 
   /**
    * ================================================
-   *                      UPDATE
+   *                      UTILS
    * ================================================
+   */
+
+  /**
+   * Finds an existing direct conversation between two users.
+   *
+   * @param user1Id - First user ID
+   * @param user2Id - Second user ID
+   * @returns Existing direct conversation or null if not found
    */
   private async findDirectConversation(
     user1Id: string,
@@ -241,6 +313,13 @@ export class ChatService {
     );
   }
 
+  /**
+   * Gets the count of unread messages for a user in a conversation.
+   *
+   * @param conversationId - ID of the conversation
+   * @param userId - ID of the user to check unread count for
+   * @returns Number of unread messages
+   */
   private async getUnreadCount(
     conversationId: string,
     userId: string
@@ -259,6 +338,12 @@ export class ChatService {
     return unreadMessages.length;
   }
 
+  /**
+   * Gets the most recent message from a conversation.
+   *
+   * @param conversationId - ID of the conversation
+   * @returns Most recent chat message or null if no messages exist
+   */
   private async getLastMessage(
     conversationId: string
   ): Promise<ChatMessage | null> {
@@ -279,6 +364,14 @@ export class ChatService {
    *                   REAL-TIME
    * ================================================
    */
+
+  /**
+   * Subscribes to real-time updates for a conversation's messages.
+   *
+   * @param conversationId - ID of the conversation to subscribe to
+   * @param callback - Function called whenever messages are updated
+   * @returns Unsubscribe function to stop listening
+   */
   subscribeToConversation(
     conversationId: string,
     callback: (messages: ChatMessage[]) => void
@@ -298,6 +391,13 @@ export class ChatService {
     );
   }
 
+  /**
+   * Subscribes to real-time updates for all conversations of a specific user.
+   *
+   * @param userId - ID of the user to subscribe to conversations for
+   * @param callback - Function called whenever user's conversations are updated
+   * @returns Unsubscribe function to stop listening
+   */
   subscribeToUserConversations(
     userId: string,
     callback: (conversations: Conversation[]) => void

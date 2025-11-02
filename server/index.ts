@@ -17,6 +17,7 @@ import morgan from "morgan";
 
 import userRoutes from "./src/routes/user/user.router";
 import authRoutes from "./src/routes/user/auth.router";
+import publicationRoutes from "./src/routes/publications/publications.router";
 
 class BackendServer {
   public app: Application;
@@ -125,6 +126,7 @@ class BackendServer {
     // API routes
     this.app.use("/api/users", userRoutes);
     this.app.use("/api/auth", authRoutes);
+    this.app.use("/api/publications", publicationRoutes);
 
     // Root endpoint
     this.app.get("/", (req: Request, res: Response) => {

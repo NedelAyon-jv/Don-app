@@ -434,7 +434,13 @@ export class PublicationController {
    */
   static getUserPublications = asyncHandler(
     async (req: Request, res: Response) => {
-      const userId = req.params.userId || req.user?.id;
+      let userId: string;
+
+      if (req.originalUrl.includes("/user/me")) {
+        userId = req.user!.id;
+      } else {
+        userId = req.params.userId || "";
+      }
 
       if (!userId) {
         return res.status(400).json({

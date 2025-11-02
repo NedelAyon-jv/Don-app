@@ -121,6 +121,7 @@ router.put(
   upload.sanitizeFilenames,
   upload.publicationImages,
   upload.optimizeImages,
+  formDataParser.mixed,
   validate.body(UpdatePublicationSchema),
   asyncHandler(PublicationController.updatePublication)
 );
@@ -256,7 +257,7 @@ router.get(
  * - q: Search query (searches title, description, and tags)
  */
 router.get(
-  "nearby",
+  "/nearby",
   rateLimit.general,
   asyncHandler(PublicationController.searchPublicationsNearby)
 );

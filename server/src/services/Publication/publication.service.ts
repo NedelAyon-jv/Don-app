@@ -13,6 +13,7 @@ import type {
   UpdatePublicationInput,
 } from "../../models/types/publication";
 import { firestoreService } from "../Firebase/firebase.service";
+import { UserService } from "../User/User.service";
 
 export interface PublicationFilters {
   type?: string;
@@ -32,7 +33,7 @@ export interface PublicationFilters {
 export interface PaginationOptions {
   page?: number;
   limit?: number;
-  sortBy?: "priority" | 'another think';
+  sortBy?: "priority" | "another think";
   sortOrder?: "asc" | "desc";
 }
 
@@ -131,6 +132,7 @@ export class PublicationService {
       const validateData = result.output;
 
       await this.verifyPublicationOwnership(id, userId);
+      console.log(validateData);
 
       await firestoreService.update<Publication>(this.COLLECTION_NAME, id, {
         ...validateData,
@@ -392,7 +394,7 @@ export class PublicationService {
     id: string
   ): Promise<PublicationResponse | null> {
     try {
-      const publication = await firestoreService.getById<PublicationResponse>(
+      const publication = await firestoreService.getById<Publication>(
         this.COLLECTION_NAME,
         id
       );
@@ -472,8 +474,20 @@ export class PublicationService {
     data: CreatePublicationInput,
     userId: string
   ): Promise<void> {
+    const user = await UserService.getUserById(userId);
+
+    if (!user) {
+      throw new Error("USER_NOT_FOUND");
+    }
+
     if (data.type === PUBLICATION_TYPES.DONATION_REQUEST) {
-      // Verify user is a donation center, does nothing for the moment
+      if (user.role !== "donationCenter" && user.role !== "admin") {
+        throw new Error("ONLY_DONATION_CENTERS_CAN_CREATE_REQUESTS");
+      }
+
+      if (!user.isVerified) {
+        throw new Error("DONATION_CENTER_MUST_BE_VERIFIED");
+      }
     }
 
     if (data.type === PUBLICATION_TYPES.DONATION_OFFER) {

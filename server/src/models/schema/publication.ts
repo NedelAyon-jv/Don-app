@@ -73,7 +73,7 @@ export const BasePublicationSchema = object({
     literal(CATEGORIES.SPORTS),
     literal(CATEGORIES.OTHER),
   ]),
-  images: array(string()),
+  images: optional(array(string())),
   location: object({
     latitude: pipe(number(), minValue(-90), maxValue(90)),
     longitude: pipe(number(), minValue(-180), maxValue(180)),
@@ -112,8 +112,8 @@ export const DonationRequestSchema = object({
   currentQuantity: number(),
   deadline: optional(string()), // ISO date
   impactDescription: optional(string()),
-  acceptedItem: array(string()),
-  restriction: optional(string()),
+  acceptedItems: array(string()),
+  restrictions: optional(string()),
   centerId: string(), // a user id of type donationCenter
 });
 

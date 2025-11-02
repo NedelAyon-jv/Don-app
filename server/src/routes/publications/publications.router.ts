@@ -16,6 +16,7 @@ import {
   string,
   maxLength,
 } from "valibot";
+import { formDataParser } from "../../middleware/formDataParser.middleware";
 
 const router = Router();
 
@@ -45,6 +46,7 @@ router.post(
   upload.sanitizeFilenames,
   upload.publicationImages,
   upload.optimizeImages,
+  formDataParser.mixed,
   validate.body(CreatePublicationSchema),
   asyncHandler(PublicationController.createPublication)
 );
@@ -260,7 +262,7 @@ router.get(
 );
 
 /**
- * Retrieves publications for a specific user or the current authenticated user.
+ * Retrieves publications for a specific user
  *
  * @route GET /publications/user/:userId?
  * @authentication Optional
@@ -272,8 +274,27 @@ router.get(
  * - rateLimit.general: General rate limiting
  */
 router.get(
-  "/user/:userId?",
+  "/user/:userId",
   auth.optional,
+  rateLimit.general,
+  asyncHandler(PublicationController.getUserPublications)
+);
+
+/**
+ * Retrieves publications for current authenticated user.
+ *
+ * @route GET /publications/user/:userId?
+ * @authentication Optional
+ * @rateLimit General (100 requests per 15 minutes)
+ * @returns User's publications
+ *
+ * @middleware
+ * - auth.optional: Authentication is optional - if authenticated, can use own ID
+ * - rateLimit.general: General rate limiting
+ */
+router.get(
+  "/user/me",
+  auth.required,  // Changed to required since it needs the user
   rateLimit.general,
   asyncHandler(PublicationController.getUserPublications)
 );

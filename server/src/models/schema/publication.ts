@@ -165,12 +165,12 @@ export const CreatePublicationSchema = object({
     literal(CATEGORIES.SPORTS),
     literal(CATEGORIES.OTHER),
   ]),
-  images: array(string()),
   location: object({
     latitude: pipe(number(), minValue(-90), maxValue(90)),
     longitude: pipe(number(), minValue(-180), maxValue(180)),
     address: optional(string()),
   }),
+  images: optional(array(string())),
   tags: optional(array(pipe(string(), maxLength(20)))),
 
   // Donation Offer specific

@@ -50,25 +50,14 @@ export class PublicationController {
 
       if (files && files.length > 0) {
         for (const file of files) {
-          try {
-            const uploadResult = await s3Service.uploadFile(
-              file.buffer,
-              userId,
-              file.originalname,
-              file.mimetype,
-              "publication"
-            );
-            imageUrls.push(uploadResult.url);
-          } catch (error) {
-            console.error("Failed to upload image:", error);
-            return res.status(400).json({
-              success: false,
-              error: {
-                code: "IMAGE_UPLOAD_FAILED",
-                message: "Failed to upload one or more images",
-              },
-            });
-          }
+          const uploadResult = await s3Service.uploadFile(
+            file.buffer,
+            userId,
+            file.originalname,
+            file.mimetype,
+            "publications"
+          );
+          imageUrls.push(uploadResult.url);
         }
       }
 
@@ -85,6 +74,7 @@ export class PublicationController {
       const publication = await PublicationService.getPublicationById(
         publicationId
       );
+
       res.status(201).json({
         success: true,
         data: {
@@ -444,7 +434,17 @@ export class PublicationController {
    */
   static getUserPublications = asyncHandler(
     async (req: Request, res: Response) => {
-      const userId = req.params.userId || req.user!.id;
+      const userId = req.params.userId || req.user?.id;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "USER_ID_REQUIRED",
+            message: "User ID is required or authentication is needed",
+          },
+        });
+      }
 
       const publications = await PublicationService.getUserPublications(userId);
 

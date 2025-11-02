@@ -1,4 +1,4 @@
-import type { InferInput, InferOutput } from "valibot";
+import type { InferDefault, InferInput, InferOutput } from "valibot";
 import type {
   BasePublicationSchema,
   CATEGORIES,

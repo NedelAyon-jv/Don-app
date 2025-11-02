@@ -289,6 +289,13 @@ export const upload = {
     maxCount: 10,
   }),
 
+  publicationImages: UploadMiddleware.validateFiles({
+    maxSize: 5 * 1024 * 1024,
+    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+    maxCount: 10,
+    required: false,
+  }),
+
   optimizeImages: UploadMiddleware.processImages({
     maxWidth: 1200,
     maxHeight: 1200,

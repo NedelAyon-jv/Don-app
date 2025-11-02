@@ -3,6 +3,15 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun --watch index.ts",
+    "start": "bun index.ts",
+    "start:prod": "NODE_ENV=production bun dist/index.js",
+    "test:firebase": "bun run src/test/test-firebase.ts",
+    "type-check": "bunx tsc --noEmit",
+    "lint": "bunx eslint src/**/*.ts",
+    "lint:fix": "bunx eslint src/**/*.ts --fix"
+  },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@types/bcrypt": "^6.0.0",
@@ -12,6 +21,7 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.9.1",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
@@ -29,14 +39,19 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.922.0",
+    "@aws-sdk/s3-request-presigner": "^3.922.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "firebase-admin": "^13.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
+    "multer": "^2.0.2",
     "node-cache": "^5.1.2",
     "valibot": "^1.1.0"
   }

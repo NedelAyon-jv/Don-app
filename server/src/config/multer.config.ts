@@ -6,6 +6,7 @@ export const multerUpload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max
+    files: 10, // Maximum number of files
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
@@ -18,4 +19,8 @@ export const multerUpload = multer({
 
 export const multerConfig = {
   single: (fieldName: string) => multerUpload.single(fieldName),
+  array: (fieldName: string, maxCount?: number) =>
+    multerUpload.array(fieldName, maxCount),
+  fields: (fields: multer.Field[]) => multerUpload.fields(fields),
+  any: () => multerUpload.any(),
 };

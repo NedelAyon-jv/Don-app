@@ -29,6 +29,23 @@ export default function RootLayout() {
         
         {/* Esta es tu app principal, está perfecta */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+        <Stack.Screen 
+          name="articulo" // Coincide con el archivo app/details.tsx
+          options={{ 
+            headerShown: true,
+            title: 'Detalles del Artículo',
+          }} 
+        />
+        
+        {/* --- PANTALLA NUEVA AÑADIDA AQUÍ --- */}
+        <Stack.Screen 
+          name="chat/[id]" // Coincide con app/chat/[id].tsx
+          options={{ 
+            headerShown: true,
+            title: 'Chat', // Este título se cambiará desde la propia pantalla
+          }} 
+        />
         
         {/* Dejamos tu pantalla modal, está bien */}
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />

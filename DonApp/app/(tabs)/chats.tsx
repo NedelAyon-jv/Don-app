@@ -1,5 +1,6 @@
-import { Colors } from '@/constants/theme'; // <-- 1. Importar Colores
-import React from 'react'; // Asegúrate de importar React
+import { Colors } from '@/constants/theme';
+import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
+import React from 'react';
 import {
   FlatList,
   Image,
@@ -7,32 +8,25 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useColorScheme, // <-- 2. Importar useColorScheme
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Datos estáticos de los chats (maquetado)
+// Datos estáticos (Asegúrate que los IDs coincidan con los de MOCK_DATA)
 const chatConversations = [
   {
-    id: '1',
+    id: '1', // Coincide con el 'id' del artículo de Carlos
     userName: 'Carlos Adrian',
     lastMessage: '¡Hola! Todavía te interesa la silla de oficina?',
     timestamp: '10:30 AM',
-    avatarUrl: 'https://via.placeholder.com/100?text=CA',
+    avatarUrl: 'https://placehold.co/100x100/FFFBDE/4E342E?text=CA',
   },
   {
-    id: '2',
+    id: '3', // Coincide con el 'id' del artículo de Nedel
     userName: 'Nedel Enrique',
-    lastMessage: 'Perfecto, ¿nos vemos a las 5 en el centro?',
-    timestamp: 'Ayer',
-    avatarUrl: 'https://via.placeholder.com/100?text=NE',
-  },
-  {
-    id: '3',
-    userName: 'Jose Eduardo',
     lastMessage: 'Gracias por la donación, que tengas buen día.',
     timestamp: '23/Oct',
-    avatarUrl: 'https://via.placeholder.com/100?text=JE',
+    avatarUrl: 'https://placehold.co/100x100/FFFBDE/4E342E?text=NE',
   },
 ];
 
@@ -43,22 +37,20 @@ interface ChatItemProps {
   timestamp: string;
   avatarUrl: string;
   onPress: () => void;
-  theme: typeof Colors.light; // <-- 3. AÑADIMOS EL TEMA A LOS PROPS
+  theme: typeof Colors.light;
 }
 
 // 2. Componente para renderizar cada item de chat
 const ChatItem: React.FC<ChatItemProps> = ({ userName, lastMessage, timestamp, avatarUrl, onPress, theme }) => (
-  // 4. Aplicamos colores del tema a la tarjeta
   <TouchableOpacity 
     style={[styles.chatCard, { backgroundColor: theme.card, borderBottomColor: theme.border }]} 
-    onPress={onPress}
+    onPress={onPress} // <-- El onPress se recibe aquí
   >
     <Image 
       source={{ uri: avatarUrl }} 
-      style={[styles.avatar, { backgroundColor: theme.border }]} // <-- Color de fondo de tema
+      style={[styles.avatar, { backgroundColor: theme.border }]} 
     />
     <View style={styles.chatContent}>
-      {/* 5. Aplicamos color de texto del tema */}
       <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
       <Text style={[styles.lastMessage, { color: theme.text }]} numberOfLines={1}>{lastMessage}</Text>
     </View>
@@ -67,23 +59,21 @@ const ChatItem: React.FC<ChatItemProps> = ({ userName, lastMessage, timestamp, a
 );
 
 export default function ChatsScreen() {
-  // 6. Obtenemos el tema
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
+  const router = useRouter(); // <-- 2. INICIALIZAR ROUTER
 
   return (
-    // 7. Aplicamos el color de fondo principal
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <FlatList
         data={chatConversations}
         renderItem={({ item }) => (
           <ChatItem
             {...item}
-            theme={theme} // <-- 8. Pasamos el tema a cada item
-            onPress={() => {
-              // Aquí irá la lógica para navegar a la pantalla de chat individual
-              console.log('Abriendo chat con:', item.userName);
-            }}
+            theme={theme}
+            // --- 3. AQUÍ ESTÁ LA MODIFICACIÓN ---
+            // Cambiamos el console.log por la navegación real
+            onPress={() => router.push(`/chat/${item.id}`)}
           />
         )}
         keyExtractor={(item) => item.id}
@@ -93,23 +83,20 @@ export default function ChatsScreen() {
   );
 }
 
-// 9. Limpiamos los colores fijos del StyleSheet
+// 9. Estilos (sin cambios)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: '#f9f9f9', // <-- Quitado
   },
   listContainer: {
     paddingTop: 8,
   },
   chatCard: {
-    // backgroundColor: '#fff', // <-- Quitado
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    // borderBottomColor: '#eee', // <-- Quitado
   },
   avatar: {
     width: 50,
@@ -118,25 +105,23 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   chatContent: {
-    flex: 1, // Ocupa el espacio disponible
+    flex: 1,
     marginRight: 10,
   },
   userName: {
     fontSize: 17,
     fontWeight: 'bold',
-    // color: '#333', // <-- Quitado
   },
   lastMessage: {
     fontSize: 15,
-    // color: 'gray', // <-- Quitado
     marginTop: 2,
-    opacity: 0.8, // <-- Añadido para jerarquía
+    opacity: 0.8,
   },
   timestamp: {
     fontSize: 13,
-    // color: 'gray', // <-- Quitado
-    alignSelf: 'flex-start', // Se alinea arriba
+    alignSelf: 'flex-start',
     paddingTop: 2,
-    opacity: 0.8, // <-- Añadido para jerarquía
+    opacity: 0.8,
   },
 });
+

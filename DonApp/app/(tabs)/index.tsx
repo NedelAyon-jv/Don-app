@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/theme'; // Tu importación del tema
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
 import React, { useState } from 'react';
 import {
   Dimensions,
@@ -28,13 +29,13 @@ const mockFeedData = [
 ];
 
 // --- 2. Interface y Dimensiones ---
-// (Añadimos 'theme' a la interface)
 interface ArticleProps { 
   title: string; 
   type: 'Donación' | 'Trueque'; 
   imageUrl: string; 
   location: string;
-  theme: typeof Colors.light; // <-- Prop para pasar el tema
+  theme: typeof Colors.light;
+  onPress: () => void; // <-- 3. AÑADIR onPress A LA INTERFACE
 }
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 24) / 2 - 8;
@@ -52,17 +53,18 @@ const CATEGORIES = [
 ];
 
 // --- 4. Componente de Tarjeta (Actualizado) ---
-// (Ahora recibe 'theme' y aplica colores dinámicamente)
-const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location, theme }) => (
-  <TouchableOpacity style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}> {/* <-- Colores de tema */}
-    <Image source={{ uri: imageUrl }} style={[styles.cardImage, { backgroundColor: theme.border }]} /> {/* <-- Colores de tema */}
+const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location, theme, onPress }) => ( // <-- Recibe onPress
+  <TouchableOpacity 
+    style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+    onPress={onPress} // <-- 4. APLICAR onPress AL BOTÓN
+  >
+    <Image source={{ uri: imageUrl }} style={[styles.cardImage, { backgroundColor: theme.border }]} />
     <View style={styles.cardContent}>
-      <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>{title}</Text> {/* <-- Colores de tema */}
-      <Text style={[styles.cardLocation, { color: theme.text }]}> {/* <-- Colores de tema */}
-        <Ionicons name="location-sharp" size={14} color={theme.text} /> {location} {/* <-- Colores de tema */}
+      <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>{title}</Text>
+      <Text style={[styles.cardLocation, { color: theme.text }]}>
+        <Ionicons name="location-sharp" size={14} color={theme.text} /> {location}
       </Text>
     </View>
-    {/* Dejamos los badges con sus colores fijos, ya que son funcionales (verde/azul) */}
     <View style={[styles.badge, type === 'Donación' ? styles.badgeDonation : styles.badgeTrade]}>
       <Text style={styles.badgeText}>{type}</Text>
     </View>
@@ -73,7 +75,8 @@ const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location, 
 // --- 5. Componente Principal (HomeScreen) ---
 export default function HomeScreen() {
   const colorScheme = useColorScheme() ?? 'light';
-  const theme = Colors[colorScheme]; // Tu objeto de tema (light o dark)
+  const theme = Colors[colorScheme];
+  const router = useRouter(); // <-- 2. INICIALIZAR ROUTER
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -85,23 +88,21 @@ export default function HomeScreen() {
   };
 
   return (
-    // Aplicas el color de fondo principal
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       
       {/* Barra de Búsqueda */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}> {/* <-- Color de tema */}
-        <View style={[styles.searchBar, { backgroundColor: theme.card }]}> {/* <-- Color de tema */}
-          <FontAwesome name="search" size={18} color={theme.text} style={styles.searchIcon} /> {/* <-- Color de tema */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <View style={[styles.searchBar, { backgroundColor: theme.card }]}>
+          <FontAwesome name="search" size={18} color={theme.text} style={styles.searchIcon} />
           <TextInput 
             placeholder="Buscar artículos..."
             style={[styles.searchInput, { color: theme.text }]}
-            placeholderTextColor={theme.text} // <-- Color de tema
+            placeholderTextColor={theme.text}
           />
         </View>
         
-        {/* Botón de Filtro */}
         <TouchableOpacity style={styles.filterButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="filter" size={24} color={theme.primary} /> {/* <-- Color de tema (usamos 'primary' por ser interactivo) */}
+          <Ionicons name="filter" size={24} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
@@ -109,16 +110,19 @@ export default function HomeScreen() {
       <FlatList
         data={mockFeedData}
         renderItem={({ item }) => (
-          // Pasamos el 'theme' como prop a la tarjeta
-          <ArticleCard {...item} theme={theme} /> // <-- Prop de tema
+          <ArticleCard 
+            {...item} 
+            theme={theme} 
+            // 5. AQUÍ ESTÁ LA NAVEGACIÓN
+            onPress={() => router.push(`./articulo?id=${item.id}`)} 
+          />
         )}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContainer}
         ListHeaderComponent={
-          // Título dinámico
-          <Text style={[styles.feedTitle, { color: theme.text }]}> {/* <-- Color de tema */}
+          <Text style={[styles.feedTitle, { color: theme.text }]}>
             {selectedCategory ? `Viendo en "${selectedCategory}"` : 'Artículos Recientes'}
           </Text>
         }
@@ -132,15 +136,14 @@ export default function HomeScreen() {
         onRequestClose={() => setModalVisible(false)}>
         
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          {/* Usamos theme.card para el fondo del modal */}
-          <View style={[styles.modalContainer, { backgroundColor: theme.card }]}> {/* <-- Color de tema */}
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Filtrar por Categoría</Text> {/* <-- Color de tema */}
+          <View style={[styles.modalContainer, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Filtrar por Categoría</Text>
             
             <TouchableOpacity
-              style={[styles.categoryItem, { borderBottomColor: theme.border }]} // <-- Color de tema
+              style={[styles.categoryItem, { borderBottomColor: theme.border }]}
               onPress={() => handleSelectCategory(null)}>
-              <FontAwesome name="th-large" size={20} color={theme.text} /> {/* <-- Color de tema */}
-              <Text style={[styles.categoryText, { color: theme.text }]}>Mostrar Todos</Text> {/* <-- Color de tema */}
+              <FontAwesome name="th-large" size={20} color={theme.text} />
+              <Text style={[styles.categoryText, { color: theme.text }]}>Mostrar Todos</Text>
             </TouchableOpacity>
 
             <FlatList
@@ -148,10 +151,10 @@ export default function HomeScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[styles.categoryItem, { borderBottomColor: theme.border }]} // <-- Color de tema
+                  style={[styles.categoryItem, { borderBottomColor: theme.border }]}
                   onPress={() => handleSelectCategory(item.name)}>
-                  <MaterialCommunityIcons name={item.icon} size={22} color={theme.text} /> {/* <-- Color de tema */}
-                  <Text style={[styles.categoryText, { color: theme.text }]}>{item.name}</Text> {/* <-- Color de tema */}
+                  <MaterialCommunityIcons name={item.icon} size={22} color={theme.text} />
+                  <Text style={[styles.categoryText, { color: theme.text }]}>{item.name}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -163,12 +166,10 @@ export default function HomeScreen() {
   );
 }
 
-// --- 6. Estilos (Limpios de Colores) ---
-// Ahora el StyleSheet solo define ESTRUCTURA, no colores.
+// --- 6. Estilos (Sin cambios) ---
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    // quitamos backgroundColor
   },
   header: { 
     flexDirection: 'row', 
@@ -176,7 +177,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, 
     paddingVertical: 10, 
     borderBottomWidth: 1, 
-    // quitamos borderBottomColor
   },
   searchBar: { 
     flex: 1, 
@@ -189,7 +189,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    // quitamos backgroundColor
   },
   searchIcon: { 
     marginRight: 8,
@@ -208,7 +207,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold', 
     marginVertical: 12, 
     paddingHorizontal: 12,
-    // quitamos color
   },
   listContainer: { 
     paddingHorizontal: 12, 
@@ -228,12 +226,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
-    // quitamos backgroundColor y borderColor
   },
   cardImage: { 
     width: '100%', 
     height: 120,
-    // quitamos backgroundColor
   },
   cardContent: { 
     padding: 10, 
@@ -242,15 +238,11 @@ const styles = StyleSheet.create({
   cardTitle: { 
     fontSize: 15, 
     fontWeight: '600',
-    // quitamos color
   },
   cardLocation: { 
     fontSize: 13, 
     marginTop: 6,
-    // quitamos color
   },
-  
-  // --- Estilos de Badges (Se quedan igual) ---
   badge: { 
     position: 'absolute', 
     top: 8, 
@@ -260,21 +252,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   badgeDonation: { 
-    backgroundColor: '#d4edda', // Verde claro funcional
+    backgroundColor: '#d4edda', 
   },
   badgeTrade: { 
-    backgroundColor: '#cce5ff', // Azul claro funcional
+    backgroundColor: '#cce5ff', 
   },
   badgeText: { 
     fontSize: 12, 
     fontWeight: 'bold', 
     color: '#0056b3',
   },
-  
-  // --- Estilos del Modal (Limpios de Colores) ---
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // El overlay oscuro se queda
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
     justifyContent: 'flex-end',
   },
   modalContainer: {
@@ -282,7 +272,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 24,
     height: '60%',
-    // quitamos backgroundColor
   },
   modalTitle: {
     fontSize: 22,
@@ -295,10 +284,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 15,
     borderBottomWidth: 1,
-    // quitamos borderBottomColor
   },
   categoryText: {
     fontSize: 17,
     marginLeft: 15,
   },
 });
+

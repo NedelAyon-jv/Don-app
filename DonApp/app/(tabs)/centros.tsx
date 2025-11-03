@@ -1,10 +1,11 @@
-import { Colors } from '@/constants/theme'; // Importa tus colores
-import { FontAwesome } from '@expo/vector-icons';
-import React from 'react'; // Asegúrate de importar React
-import { FlatList, StyleSheet, Text, View, useColorScheme } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/theme';
+import React, { useMemo } from 'react';
+import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+// --- 1. IMPORTAR COMPONENTES DE MAPS ---
+import MapView, { Callout, Marker } from 'react-native-maps';
 
-// Datos estáticos de los centros de donación
+// --- 2. DATOS CON COORDENADAS ---
+// (Añadí 'coordinate' a cada centro)
 const donationCenters = [
   {
     id: '1',
@@ -12,6 +13,7 @@ const donationCenters = [
     colonia: 'Camino Real',
     status: 'Abierto',
     horario: 'L-V 9:00 AM - 5:00 PM',
+    coordinate: { latitude: 24.118, longitude: -110.325 },
   },
   {
     id: '2',
@@ -19,6 +21,7 @@ const donationCenters = [
     colonia: 'Santa Fe',
     status: 'Cerrado',
     horario: 'S 10:00 AM - 2:00 PM',
+    coordinate: { latitude: 24.110, longitude: -110.334 },
   },
   {
     id: '3',
@@ -26,6 +29,7 @@ const donationCenters = [
     colonia: 'Centro',
     status: 'Abierto',
     horario: 'L-S 8:00 AM - 6:00 PM',
+    coordinate: { latitude: 24.163, longitude: -110.316 },
   },
   {
     id: '4',
@@ -33,132 +37,104 @@ const donationCenters = [
     colonia: 'Indeco',
     status: 'Abierto',
     horario: 'L-V 10:00 AM - 4:00 PM',
+    coordinate: { latitude: 24.116, longitude: -110.338 },
   },
 ];
 
-
-// 1. Define un "interface" para los props
-interface CenterItemProps {
-  name: string;
-  colonia: string;
-  status: string;
-  horario: string;
-  theme: typeof Colors.light; // <-- 1. AÑADIMOS EL TEMA A LOS PROPS
-}
-
-// 2. Aplica el tipo a tus props y recibe 'theme'
-const CenterItem: React.FC<CenterItemProps> = ({ name, colonia, status, horario, theme }) => (
-  // 3. Aplicamos los colores del tema a la tarjeta
-  <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-    <View style={styles.iconContainer}>
-      {/* 4. Usamos el color primario del tema */}
-      <FontAwesome name="building" size={24} color={theme.primary} />
-    </View>
-    <View style={styles.cardContent}>
-      {/* 5. Usamos el color de texto del tema */}
-      <Text style={[styles.cardTitle, { color: theme.text }]}>{name}</Text>
-      <Text style={[styles.cardColonia, { color: theme.text }]}>{colonia}</Text>
-      <Text style={[styles.cardHours, { color: theme.text }]}>{horario}</Text>
-    </View>
-    <View style={styles.statusContainer}>
-      <Text style={[
-        styles.statusText,
-        // Los colores de estado (Abierto/Cerrado) son funcionales,
-        // así que está bien dejarlos como están.
-        status === 'Abierto' ? styles.statusOpen : styles.statusClosed
-      ]}>
-        {status}
-      </Text>
-    </View>
-  </View>
-);
-
+// --- 3. REGIÓN INICIAL (Centrado en La Paz) ---
+const laPazRegion = {
+  latitude: 24.135,
+  longitude: -110.325,
+  latitudeDelta: 0.09,
+  longitudeDelta: 0.04,
+};
 
 export default function DonationCentersScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    // 6. Aplicamos el color de fondo principal
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <FlatList
-        data={donationCenters}
-        renderItem={({ item }) => (
-          // 7. Pasamos el tema como prop a cada item
-          <CenterItem {...item} theme={theme} />
-        )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
-    </SafeAreaView>
+    // 4. ELIMINAMOS SafeAreaView y FlatList
+    // El mapa necesita un View simple con flex: 1
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialRegion={laPazRegion}
+      >
+        {/* 5. Mapeamos los centros como "Marcadores" (Pins) */}
+        {donationCenters.map((center) => (
+          <Marker
+            key={center.id}
+            coordinate={center.coordinate}
+            title={center.name}
+            description={center.colonia}
+            pinColor={theme.primary} // Usamos tu color primario para el pin
+          >
+            {/* 6. CALLOUT: La "burbuja" que sale al hacer clic */}
+            <Callout>
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutTitle}>{center.name}</Text>
+                <Text style={styles.calloutText}>{center.horario}</Text>
+                <Text style={[
+                  styles.statusText,
+                  center.status === 'Abierto' ? styles.statusOpen : styles.statusClosed
+                ]}>
+                  {center.status}
+                </Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+      </MapView>
+    </View>
   );
 }
 
-// 8. Limpiamos los colores fijos del StyleSheet
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    // backgroundColor: '#f4f4f8', // <-- Quitado
-  },
-  listContainer: {
-    padding: 16,
-  },
-  card: {
-    // backgroundColor: '#fff', // <-- Quitado
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1, // <-- Añadido para consistencia
-  },
-  iconContainer: {
-    marginRight: 16,
-  },
-  cardContent: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    // color: '#333', // <-- Quitado
-  },
-  cardColonia: {
-    fontSize: 15,
-    // color: 'gray', // <-- Quitado
-    marginTop: 2,
-    opacity: 0.8, // <-- Añadido para jerarquía
-  },
-  cardHours: {
-    fontSize: 14,
-    // color: '#555', // <-- Quitado
-    marginTop: 4,
-    opacity: 0.9, // <-- Añadido para jerarquía
-  },
-  statusContainer: {
-    marginLeft: 10,
-    alignItems: 'flex-end',
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  // Estilos funcionales (verde/rojo) - se quedan
-  statusOpen: {
-    backgroundColor: '#d4edda',
-    color: '#155724',
-  },
-  statusClosed: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-  },
-});
+// 7. ESTILOS ACTUALIZADOS
+const createStyles = (theme: typeof Colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    // El mapa DEBE tener este estilo para llenar la pantalla
+    map: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    // --- Estilos para la burbuja (Callout) ---
+    calloutContainer: {
+      width: 220, // Ancho de la burbuja
+      padding: 5,
+    },
+    calloutTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 4,
+    },
+    calloutText: {
+      fontSize: 14,
+      color: theme.text,
+      opacity: 0.8,
+      marginBottom: 6,
+    },
+    statusText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      overflow: 'hidden',
+      textAlign: 'center',
+    },
+    statusOpen: {
+      backgroundColor: '#d4edda',
+      color: '#155724',
+    },
+    statusClosed: {
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
+    },
+  });
+

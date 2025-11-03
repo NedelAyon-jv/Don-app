@@ -1,47 +1,54 @@
-import { Colors } from '@/constants/theme'; // <-- 1. Importar Colores
-import React, { useMemo } from 'react'; // <-- 2. Importar useMemo
+import { Colors } from '@/constants/theme';
+import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR
+import React, { useMemo } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity, // <-- 3. Usar TouchableOpacity
+  TouchableOpacity,
   View,
-  useColorScheme, // <-- 4. Importar useColorScheme
+  useColorScheme,
 } from 'react-native';
 
 export default function ProfileScreen() {
-  // --- 5. Configuración del Tema ---
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
-  const styles = useMemo(() => createStyles(theme), [theme]); // 6. Estilos dinámicos
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const router = useRouter(); // <-- 2. INICIALIZAR
 
   // Simulación de datos del usuario.
   const user = {
     name: 'Andrey Julian Gutierrez',
     location: 'La Paz, BCS',
-    profilePic: 'https://via.placeholder.com/150',
+    profilePic: 'https://placehold.co/150',
     rating: 4.8,
     totalDonations: 5,
     totalTrades: 3,
   };
 
+  const handleLogout = () => {
+    console.log('Cerrando sesión y redirigiendo a /index...');
+    
+    // --- 3. LA LLAMADA CORRECTA ---
+    // Esto le dice al router: "Ve al archivo 'index.tsx' 
+    // que está en la raíz (app/index.tsx), NO al 
+    // 'index.tsx' que está dentro de '(tabs)'"
+    router.replace('../index');
+  };
+
   return (
-    // 7. Aplicar color de fondo
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       
-      {/* Sección de datos personales */}
+      {/* (Todo el JSX de tu perfil: Header, Stats, etc.) */}
       <View style={styles.header}>
-        <Image 
-          source={{ uri: user.profilePic }} 
-          style={styles.profileImage} 
-        />
+        <Image source={{ uri: user.profilePic }} style={styles.profileImage} />
         <Text style={styles.name}>{user.name}</Text>
         <Text style={styles.location}>{user.location}</Text>
       </View>
 
-      {/* Sección de calificación e historial */}
       <View style={styles.statsContainer}>
+        {/* ... (stats) ... */}
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>{user.rating} ★</Text>
           <Text style={styles.statLabel}>Calificación</Text>
@@ -56,29 +63,25 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Historial de intercambios */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Historial de Intercambios</Text>
         <Text style={styles.placeholderText}>- Donación de "Silla de oficina" (10/Oct/2025)</Text>
-        <Text style={styles.placeholderText}>- Trueque de "Libros" (05/Oct/2025)</Text>
       </View>
 
-      {/* Opciones de perfil (Botones reemplazados) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Configuración</Text>
-        
-        <TouchableOpacity style={styles.button} onPress={() => { /* Navegar a editar perfil */ }}>
+        <TouchableOpacity style={styles.button} onPress={() => { /* ... */ }}>
           <Text style={styles.buttonText}>Editar Datos Personales</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.button} onPress={() => { /* Navegar a preferencias */ }}>
+        <TouchableOpacity style={styles.button} onPress={() => { /* ... */ }}>
           <Text style={styles.buttonText}>Mis Preferencias de Categorías</Text>
         </TouchableOpacity>
       </View>
       
-      {/* Botón de Cerrar Sesión (Reemplazado) */}
+      {/* Botón de Cerrar Sesión */}
       <View style={styles.logoutButtonContainer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={() => { /* Lógica de logout */ }}>
+        {/* 4. CONECTAR EL onPress */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.buttonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
@@ -86,41 +89,40 @@ export default function ProfileScreen() {
   );
 }
 
-// 8. Estilos dinámicos
+// (Todos tus estilos, sin cambios)
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      // backgroundColor: theme.background, // <-- Aplicado arriba
     },
     header: {
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       padding: 24,
       alignItems: 'center',
       borderBottomWidth: 1,
-      borderBottomColor: theme.border, // <-- Color de tema
+      borderBottomColor: theme.border,
     },
     profileImage: {
       width: 120,
       height: 120,
       borderRadius: 60,
       marginBottom: 12,
-      backgroundColor: theme.border, // <-- Color de tema
+      backgroundColor: theme.border,
     },
     name: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
     },
     location: {
       fontSize: 16,
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
       opacity: 0.8,
     },
     statsContainer: {
       flexDirection: 'row',
       justifyContent: 'space-around',
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       paddingVertical: 20,
       marginTop: 10,
     },
@@ -130,16 +132,16 @@ const createStyles = (theme: typeof Colors.light) =>
     statNumber: {
       fontSize: 20,
       fontWeight: 'bold',
-      color: theme.primary, // <-- Color de tema
+      color: theme.primary,
     },
     statLabel: {
       fontSize: 14,
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
       marginTop: 4,
       opacity: 0.8,
     },
     section: {
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       marginTop: 10,
       padding: 20,
     },
@@ -147,15 +149,14 @@ const createStyles = (theme: typeof Colors.light) =>
       fontSize: 18,
       fontWeight: 'bold',
       marginBottom: 12,
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
     },
     placeholderText: {
       fontSize: 15,
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
       lineHeight: 22,
       opacity: 0.9,
     },
-    // --- Nuevos estilos para los botones ---
     button: {
       backgroundColor: theme.primary,
       padding: 14,
@@ -164,7 +165,7 @@ const createStyles = (theme: typeof Colors.light) =>
       marginBottom: 10,
     },
     buttonText: {
-      color: theme.card, // Texto blanco (o color de tarjeta)
+      color: theme.card, // Asumiendo que el fondo del botón es oscuro
       fontSize: 16,
       fontWeight: 'bold',
     },
@@ -172,9 +173,10 @@ const createStyles = (theme: typeof Colors.light) =>
       margin: 20,
     },
     logoutButton: {
-      backgroundColor: theme.error, // <-- Color de tema (funcional)
+      backgroundColor: theme.error, // Color de error para logout
       padding: 14,
       borderRadius: 8,
       alignItems: 'center',
     },
   });
+

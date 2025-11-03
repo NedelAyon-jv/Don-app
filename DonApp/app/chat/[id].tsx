@@ -1,27 +1,29 @@
 import { Colors } from '@/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react'; // Importar useRef
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- SIMULACIÓN DE DATOS ---
+// (¡OJO! Para que 'inverted' funcione bien, los datos iniciales
+// también deben estar en orden cronológico inverso: el más RECIENTE primero)
 const MOCK_MESSAGES: { [key: string]: any[] } = {
   '1': [ // Simula el chat del Artículo 1
-    { id: 'm1', text: '¡Hola! Todavía te interesa la silla de oficina?', sender: 'other' },
-    { id: 'm2', text: 'Hola, sí! Aún está disponible?', sender: 'me' },
     { id: 'm3', text: 'Sip, sin problema. ¿Puedes pasar por ella hoy?', sender: 'other' },
+    { id: 'm2', text: 'Hola, sí! Aún está disponible?', sender: 'me' },
+    { id: 'm1', text: '¡Hola! Todavía te interesa la silla de oficina?', sender: 'other' },
   ],
   '3': [ // Simula el chat del Artículo 3
     { id: 'm4', text: 'Hola, vi tu donación de despensa. ¿Dónde podría recogerla?', sender: 'me' },
@@ -38,16 +40,14 @@ export default function ChatScreen() {
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
   const navigation = useNavigation();
-
-  // 1. Obtener el ID del chat de la URL
   const { id } = useLocalSearchParams();
   const chatPartnerName = MOCK_USERS[id as string] || 'Chat';
 
-  // 2. Cargar mensajes (simulado)
   const [messages, setMessages] = useState(MOCK_MESSAGES[id as string] || []);
   const [newMessage, setNewMessage] = useState('');
+  
+  const flatListRef = useRef<FlatList>(null);
 
-  // 3. Actualizar el título del header con el nombre del usuario
   useEffect(() => {
     navigation.setOptions({ title: chatPartnerName });
   }, [navigation, chatPartnerName]);
@@ -59,8 +59,17 @@ export default function ChatScreen() {
       text: newMessage,
       sender: 'me',
     };
-    setMessages((prevMessages) => [...prevMessages, newMsg]);
+    
+    // --- 1. LA CORRECCIÓN ESTÁ AQUÍ ---
+    // Añadimos el mensaje nuevo al PRINCIPIO del array,
+    // porque el FlatList está 'inverted'.
+    setMessages((prevMessages) => [newMsg, ...prevMessages]);
+    // ---------------------------------
+    
     setNewMessage('');
+    
+    // El scroll al offset 0 sigue siendo correcto
+    setTimeout(() => flatListRef.current?.scrollToOffset({ animated: true, offset: 0 }), 100);
   };
 
   // Renderiza cada burbuja de chat
@@ -91,15 +100,16 @@ export default function ChatScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0} // Ajusta esto si el header es de altura diferente
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0} 
       >
         {/* Lista de Mensajes */}
         <FlatList
+          ref={flatListRef} 
           style={styles.messageList}
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          inverted // Empieza desde abajo
+          inverted // <-- Esto renderiza la data [m3, m2, m1]
         />
 
         {/* Caja de Input */}

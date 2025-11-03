@@ -1,37 +1,52 @@
-import { Colors } from '@/constants/theme'; // Importa tus colores
+import { Colors } from '@/constants/theme';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  Alert, // <--- Importar Alert
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView, // <--- Importar ScrollView
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
-  const styles = useMemo(() => createStyles(theme), [theme]); // Estilos dinámicos
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
 
-  const [name, setName] = useState('');
+  // --- 1. ESTADOS ACTUALIZADOS ---
+  const [username, setUsername] = useState('');
+  const [name, setName] = useState(''); // Renombrado de 'name'
+  const [primer_ap, setPrimerApellido] = useState('');
+  const [segundo_ap, setSegundoApellido] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  // ---------------------------------
 
+  // --- 2. LÓGICA DE REGISTRO ACTUALIZADA ---
   const handleSignUp = () => {
-    // Lógica de registro (simulada)
-    if (!name || !email || !password) {
+    // Validación de campos vacíos
+    if (!username || !name || !email || !password || !confirmPassword || !phone) {
       Alert.alert('Campos incompletos', 'Por favor, completa todos los campos.');
       return;
     }
-    console.log('Registrando a:', name, email);
+    // Validación de contraseñas
+    if (password !== confirmPassword) {
+      Alert.alert('Las contraseñas no coinciden', 'Por favor, verifica tu contraseña.');
+      return;
+    }
+    
+    console.log('Registrando a:', { username, fullName: name, email, phone });
     // Si es exitoso, redirige a los tabs
     router.replace('/(tabs)');
   };
@@ -42,23 +57,60 @@ export default function SignUpScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
         
-        <View style={styles.content}>
-          {/* Usamos un ícono diferente para 'registrar' */}
+        {/* 3. CAMBIADO DE VIEW A SCROLLVIEW para un formulario largo */}
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <FontAwesome name="leaf" size={60} color={theme.primary} style={styles.logo} />
 
           <Text style={styles.title}>Crea tu cuenta</Text>
           <Text style={styles.subtitle}>Forma parte de la comunidad DonApp.</Text>
 
-          {/* Input Nombre */}
+          {/* --- 4. NUEVOS INPUTS AÑADIDOS --- */}
+
+          {/* Input Usuario */}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="at" size={22} color={theme.text} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Usuario (ej: @andorei_j)"
+              placeholderTextColor={theme.text}
+              autoCapitalize="none"
+              value={username}
+              onChangeText={setUsername}
+            />
+          </View>
+
+          {/* Input Nombre(s) */}
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="account-outline" size={22} color={theme.text} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Nombre completo"
+              placeholder="Nombre(s)"
               placeholderTextColor={theme.text}
               autoCapitalize="words"
               value={name}
               onChangeText={setName}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="account-outline" size={22} color={theme.text} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Primer Apellido"
+              placeholderTextColor={theme.text}
+              autoCapitalize="words"
+              value={name}
+              onChangeText={setPrimerApellido}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="account-outline" size={22} color={theme.text} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Segundo Apellido (Opcional)"
+              placeholderTextColor={theme.text}
+              autoCapitalize="words"
+              value={name}
+              onChangeText={setSegundoApellido}
             />
           </View>
 
@@ -89,11 +141,39 @@ export default function SignUpScreen() {
             />
           </View>
 
+          {/* Input Confirmar Contraseña */}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="lock-check-outline" size={22} color={theme.text} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirmar contraseña"
+              placeholderTextColor={theme.text}
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+          </View>
+
+          {/* Input Teléfono */}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="phone-outline" size={22} color={theme.text} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Teléfono (10 dígitos)"
+              placeholderTextColor={theme.text}
+              keyboardType="phone-pad"
+              maxLength={10}
+              value={phone}
+              onChangeText={setPhone}
+            />
+          </View>
+
           {/* Botón de Registrarse */}
           <TouchableOpacity style={styles.button} onPress={handleSignUp}>
             <Text style={styles.buttonText}>Crear Cuenta</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
+        {/* --- Fin del ScrollView --- */}
 
         {/* Link a Login */}
         <TouchableOpacity style={styles.footerContainer} onPress={() => router.back()}>
@@ -108,7 +188,7 @@ export default function SignUpScreen() {
   );
 }
 
-// (Usamos los mismos nombres de estilos que en Login para consistencia)
+// 5. ESTILOS AJUSTADOS PARA SCROLLVIEW
 const createStyles = (theme: typeof Colors.light) => 
   StyleSheet.create({
     safeArea: {
@@ -117,12 +197,11 @@ const createStyles = (theme: typeof Colors.light) =>
     },
     container: {
       flex: 1,
-      padding: 24,
     },
-    content: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+    // Contenedor del Scroll
+    scrollContent: {
+      padding: 24,
+      alignItems: 'center', // Centra el logo, título y subtítulo
     },
     logo: {
       marginBottom: 20,
@@ -169,22 +248,22 @@ const createStyles = (theme: typeof Colors.light) =>
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
-      marginTop: 20, // Espacio extra arriba del botón
+      marginTop: 20,
     },
     buttonText: {
-      color: theme.background, // Usa el color de fondo para el texto
+      color: theme.background,
       fontSize: 18,
       fontWeight: 'bold',
     },
-    footerContainer: { // Renombrado de 'signupContainer' a 'footerContainer'
+    footerContainer: {
       padding: 10,
       alignItems: 'center',
     },
-    footerText: { // Renombrado de 'signupText' a 'footerText'
+    footerText: {
       fontSize: 15,
       color: theme.text,
     },
-    footerLink: { // Renombrado de 'signupLink' a 'footerLink'
+    footerLink: {
       color: theme.primary,
       fontWeight: 'bold',
     },

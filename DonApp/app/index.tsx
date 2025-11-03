@@ -3,14 +3,14 @@ import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
 import React, { useMemo, useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -32,7 +32,7 @@ export default function LoginScreen() {
     }
     console.log('Login con:', email, password);
     */
-    
+
     // Si es exitoso (o para pruebas), redirige a los tabs
     console.log('Navegando a /Tabs...');
     router.replace('/(tabs)');
@@ -43,7 +43,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
-        
+
         <View style={styles.content}>
           <FontAwesome name="gift" size={60} color={theme.primary} style={styles.logo} />
 
@@ -74,7 +74,7 @@ export default function LoginScreen() {
               onChangeText={setPassword}
             />
           </View>
-          
+
           <TouchableOpacity>
             <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
@@ -85,7 +85,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* ... (Separador y botones sociales) ... */}
-          <Text style={styles.separator}>O inicia sesión con</Text>
+          {/* <Text style={styles.separator}>O inicia sesión con</Text>
           <View style={styles.socialContainer}>
             <TouchableOpacity style={styles.socialButton}>
               <FontAwesome name="google" size={24} color={theme.text} />
@@ -93,14 +93,14 @@ export default function LoginScreen() {
             <TouchableOpacity style={styles.socialButton}>
               <FontAwesome name="apple" size={26} color={theme.text} />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
 
         {/* ============================================== */}
         {/* ==== BOTÓN PARA IR A SIGNUP ==== */}
         {/* ============================================== */}
-        <TouchableOpacity 
-          style={styles.signupContainer} 
+        <TouchableOpacity
+          style={styles.signupContainer}
           onPress={() => router.push('/signup')} // <-- Navega a 'signup.tsx'
         >
           <Text style={styles.signupText}>
@@ -108,14 +108,14 @@ export default function LoginScreen() {
             <Text style={styles.signupLink}>Regístrate aquí</Text>
           </Text>
         </TouchableOpacity>
-        
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 // (Todos los estilos... 'createStyles')
-const createStyles = (theme: typeof Colors.light) => 
+const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,

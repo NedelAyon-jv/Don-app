@@ -42,13 +42,13 @@ interface ChatItemProps {
 
 // 2. Componente para renderizar cada item de chat
 const ChatItem: React.FC<ChatItemProps> = ({ userName, lastMessage, timestamp, avatarUrl, onPress, theme }) => (
-  <TouchableOpacity 
-    style={[styles.chatCard, { backgroundColor: theme.card, borderBottomColor: theme.border }]} 
+  <TouchableOpacity
+    style={[styles.chatCard, { backgroundColor: theme.card, borderBottomColor: theme.border }]}
     onPress={onPress} // <-- El onPress se recibe aquí
   >
-    <Image 
-      source={{ uri: avatarUrl }} 
-      style={[styles.avatar, { backgroundColor: theme.border }]} 
+    <Image
+      source={{ uri: avatarUrl }}
+      style={[styles.avatar, { backgroundColor: theme.border }]}
     />
     <View style={styles.chatContent}>
       <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
@@ -65,6 +65,7 @@ export default function ChatsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.header, { color: theme.text }]}>Chats</Text>
       <FlatList
         data={chatConversations}
         renderItem={({ item }) => (
@@ -87,6 +88,19 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: -20
+  },
+  header: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    // margin: 10,
+    // padding: 10,
+    marginBottom: 10,
+    marginTop: -25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   listContainer: {
     paddingTop: 8,

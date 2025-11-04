@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 // --- 1. IMPORTAR COMPONENTES DE MAPS ---
 import MapView, { Callout, Marker } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- 2. DATOS CON COORDENADAS ---
 // (Añadí 'coordinate' a cada centro)
@@ -57,42 +58,46 @@ export default function DonationCentersScreen() {
   return (
     // 4. ELIMINAMOS SafeAreaView y FlatList
     // El mapa necesita un View simple con flex: 1
-    <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        initialRegion={laPazRegion}
-      >
-        {/* 5. Mapeamos los centros como "Marcadores" (Pins) */}
-        {donationCenters.map((center) => (
-          // ... (dentro de tu return)
-          <Marker
-            key={center.id}
-            coordinate={center.coordinate}
-            title={center.name}
-            description={center.colonia}
-            pinColor={theme.primary}
-          >
-            {/* 6. CALLOUT: La "burbuja" que sale al hacer clic */}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.container}>
+        <Text style={[styles.title, { color: theme.text }]}>Centros de Donaciones</Text>
+        <MapView
+          style={styles.map}
+          initialRegion={laPazRegion}
+        >
+          {/* 5. Mapeamos los centros como "Marcadores" (Pins) */}
+          {donationCenters.map((center) => (
+            // ... (dentro de tu return)
+            <Marker
+              key={center.id}
+              coordinate={center.coordinate}
+              title={center.name}
+              description={center.colonia}
+              pinColor={theme.primary}
+            >
+              {/* 6. CALLOUT: La "burbuja" que sale al hacer clic */}
 
-            {/* --- ✨ ¡AÑADE ESTO! --- */}
-            <Callout tooltip={true}>
-              {/* --------------------- */}
+              {/* --- ✨ ¡AÑADE ESTO! --- */}
+              <Callout tooltip={true}>
+                {/* --------------------- */}
 
-              <View style={styles.calloutContainer}>
-                <Text style={styles.calloutTitle}>{center.name}</Text>
-                <Text style={styles.calloutText}>{center.horario}</Text>
-                <Text style={[
-                  styles.statusText,
-                  center.status === 'Abierto' ? styles.statusOpen : styles.statusClosed
-                ]}>
-                  {center.status}
-                </Text>
-              </View>
-            </Callout>
-          </Marker>
-        ))}
-      </MapView>
-    </View>
+                <View style={styles.calloutContainer}>
+                  <Text style={styles.calloutTitle}>{center.name}</Text>
+                  <Text style={styles.calloutText}>{center.horario}</Text>
+                  <Text style={[
+                    styles.statusText,
+                    center.status === 'Abierto' ? styles.statusOpen : styles.statusClosed
+                  ]}>
+                    {center.status}
+                  </Text>
+                </View>
+              </Callout>
+            </Marker>
+          ))}
+        </MapView>
+      </View>
+
+    </SafeAreaView>
   );
 }
 
@@ -103,6 +108,20 @@ const createStyles = (theme: typeof Colors.light) =>
     container: {
       flex: 1,
       backgroundColor: theme.background,
+      marginBottom: -10
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: 'bold',
+      margin: 10,
+      // padding: 10,
+      marginTop: -45,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      // paddingHorizontal: 10,
+      // paddingVertical: 1,
+      textAlign: 'center'
     },
     map: {
       ...StyleSheet.absoluteFillObject,

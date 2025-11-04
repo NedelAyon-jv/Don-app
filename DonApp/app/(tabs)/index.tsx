@@ -29,10 +29,10 @@ const mockFeedData = [
 ];
 
 // --- 2. Interface y Dimensiones ---
-interface ArticleProps { 
-  title: string; 
-  type: 'Donación' | 'Trueque'; 
-  imageUrl: string; 
+interface ArticleProps {
+  title: string;
+  type: 'Donación' | 'Trueque';
+  imageUrl: string;
   location: string;
   theme: typeof Colors.light;
   onPress: () => void; // <-- 3. AÑADIR onPress A LA INTERFACE
@@ -54,7 +54,7 @@ const CATEGORIES = [
 
 // --- 4. Componente de Tarjeta (Actualizado) ---
 const ArticleCard: React.FC<ArticleProps> = ({ title, type, imageUrl, location, theme, onPress }) => ( // <-- Recibe onPress
-  <TouchableOpacity 
+  <TouchableOpacity
     style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
     onPress={onPress} // <-- 4. APLICAR onPress AL BOTÓN
   >
@@ -89,32 +89,38 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      
+
       {/* Barra de Búsqueda */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <View style={[styles.searchBar, { backgroundColor: theme.card }]}>
-          <FontAwesome name="search" size={18} color={theme.text} style={styles.searchIcon} />
-          <TextInput 
-            placeholder="Buscar artículos..."
-            style={[styles.searchInput, { color: theme.text }]}
-            placeholderTextColor={theme.text}
-          />
+      <View style={[styles.containerTop]}>
+        <Text style={[styles.title, { color: theme.text }]}>
+          Inicio
+        </Text>
+        <View style={[styles.header, { borderBottomColor: theme.border }]}>
+          <View style={[styles.searchBar, { backgroundColor: theme.card }]}>
+            <FontAwesome name="search" size={18} color={theme.text} style={styles.searchIcon} />
+            <TextInput
+              placeholder="Buscar artículos..."
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholderTextColor={theme.text}
+            />
+          </View>
+
+          <TouchableOpacity style={styles.filterButton} onPress={() => setModalVisible(true)}>
+            <Ionicons name="filter" size={24} color={theme.primary} />
+          </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity style={styles.filterButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="filter" size={24} color={theme.primary} />
-        </TouchableOpacity>
+
       </View>
 
       {/* --- Feed de Artículos --- */}
       <FlatList
         data={mockFeedData}
         renderItem={({ item }) => (
-          <ArticleCard 
-            {...item} 
-            theme={theme} 
+          <ArticleCard
+            {...item}
+            theme={theme}
             // 5. AQUÍ ESTÁ LA NAVEGACIÓN
-            onPress={() => router.push(`./articulo?id=${item.id}`)} 
+            onPress={() => router.push(`./articulo?id=${item.id}`)}
           />
         )}
         keyExtractor={(item) => item.id}
@@ -134,11 +140,11 @@ export default function HomeScreen() {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
-        
+
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
           <View style={[styles.modalContainer, { backgroundColor: theme.card }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Filtrar por Categoría</Text>
-            
+
             <TouchableOpacity
               style={[styles.categoryItem, { borderBottomColor: theme.border }]}
               onPress={() => handleSelectCategory(null)}>
@@ -168,21 +174,35 @@ export default function HomeScreen() {
 
 // --- 6. Estilos (Sin cambios) ---
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
   },
-  header: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingHorizontal: 12, 
-    paddingVertical: 10, 
-    borderBottomWidth: 1, 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  searchBar: { 
-    flex: 1, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    borderRadius: 10, 
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    // margin: 10,
+    // padding: 10,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  containerTop: {
+    top: -40,
+    marginBottom: -30
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
     paddingHorizontal: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -190,36 +210,36 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  searchIcon: { 
+  searchIcon: {
     marginRight: 8,
   },
-  searchInput: { 
-    flex: 1, 
-    height: 40, 
+  searchInput: {
+    flex: 1,
+    height: 40,
     fontSize: 15,
   },
-  filterButton: { 
-    marginLeft: 10, 
+  filterButton: {
+    marginLeft: 10,
     padding: 8,
   },
-  feedTitle: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    marginVertical: 12, 
+  feedTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 12,
     paddingHorizontal: 12,
   },
-  listContainer: { 
-    paddingHorizontal: 12, 
+  listContainer: {
+    paddingHorizontal: 12,
     paddingBottom: 16,
   },
-  row: { 
+  row: {
     justifyContent: 'space-between',
   },
-  card: { 
-    width: cardWidth, 
-    borderRadius: 8, 
-    borderWidth: 1, 
-    marginBottom: 16, 
+  card: {
+    width: cardWidth,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -227,44 +247,44 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  cardImage: { 
-    width: '100%', 
+  cardImage: {
+    width: '100%',
     height: 120,
   },
-  cardContent: { 
-    padding: 10, 
+  cardContent: {
+    padding: 10,
     height: 80,
   },
-  cardTitle: { 
-    fontSize: 15, 
+  cardTitle: {
+    fontSize: 15,
     fontWeight: '600',
   },
-  cardLocation: { 
-    fontSize: 13, 
+  cardLocation: {
+    fontSize: 13,
     marginTop: 6,
   },
-  badge: { 
-    position: 'absolute', 
-    top: 8, 
-    right: 8, 
-    paddingHorizontal: 8, 
-    paddingVertical: 4, 
+  badge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 6,
   },
-  badgeDonation: { 
-    backgroundColor: '#d4edda', 
+  badgeDonation: {
+    backgroundColor: '#d4edda',
   },
-  badgeTrade: { 
-    backgroundColor: '#cce5ff', 
+  badgeTrade: {
+    backgroundColor: '#cce5ff',
   },
-  badgeText: { 
-    fontSize: 12, 
-    fontWeight: 'bold', 
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
     color: '#0056b3',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContainer: {

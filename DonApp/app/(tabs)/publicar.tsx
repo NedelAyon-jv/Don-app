@@ -25,7 +25,7 @@ export default function PublishScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
   // 5. Generar estilos dinámicamente
-  const styles = useMemo(() => createStyles(theme), [theme]); 
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -75,9 +75,10 @@ export default function PublishScreen() {
 
   // --- Renderizado de la UI (con colores de tema) ---
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        
+        <Text style={[styles.header, { color: theme.text }]}>Publicar</Text>
+
         {/* Título */}
         <Text style={styles.label}>Título</Text>
         <TextInput
@@ -142,7 +143,7 @@ export default function PublishScreen() {
         </View>
 
         {/* Estado: Disponible o No Disponible */}
-        <Text style={styles.label}>Estado</Text>
+        {/* <Text style={styles.label}>Estado</Text>
         <View style={styles.segmentContainer}>
           <TouchableOpacity
             style={[styles.segmentButton, status === 'Disponible' && styles.segmentButtonActive]}
@@ -154,7 +155,7 @@ export default function PublishScreen() {
             onPress={() => setStatus('No Disponible')}>
             <Text style={[styles.segmentText, status === 'No Disponible' && styles.segmentTextActive]}>No Disponible</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Botón de Publicar */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
@@ -168,14 +169,27 @@ export default function PublishScreen() {
 
 // --- 6. Estilos dinámicos ---
 // (Creamos una función que recibe el tema)
-const createStyles = (theme: typeof Colors.light) => 
+const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.background, // <-- Color de tema
+      // backgroundColor: theme.background, // <-- Color de tema
+      marginTop: -20
     },
     scrollContainer: {
       padding: 16,
+    },
+    header: {
+      fontSize: 30,
+      fontWeight: 'bold',
+      // margin: 10,
+      // padding: 10,
+      marginBottom: 10,
+      marginTop: -25,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 1,
+      paddingVertical: 1,
     },
     label: {
       fontSize: 16,

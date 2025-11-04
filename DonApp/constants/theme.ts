@@ -32,6 +32,7 @@ const palette = {
 };
 
 // --- TEMA CLARO ---
+// --- TEMA CLARO ---
 export const lightColors = {
   primary: palette.primary,
   secondary: palette.secondary,
@@ -41,21 +42,27 @@ export const lightColors = {
   border: palette.lightBorder,
   
   // Colores funcionales
-  success: palette.primary, // El verde primario es perfecto para 'success'
+  success: palette.primary, 
   error: palette.red,
   warning: palette.yellow,
   info: palette.blue,
   accent: palette.purple,
+
+  // --- ✨ AÑADE ESTO (Colores de Estado) ---
+  successBg: '#d4edda',   // Verde pálido (el que tenías)
+  successText: '#155724', // Verde oscuro (el que tenías)
+  errorBg: '#f8d7da',     // Rojo pálido (el que tenías)
+  errorText: '#721c24',   // Rojo oscuro (el que tenías)
 };
 
 // --- TEMA OSCURO ---
 export const darkColors = {
-  primary: palette.primary,       // El verde primario resalta bien
-  secondary: palette.accent,      // Usamos el 'accent' más brillante
-  background: palette.darkBg,     // Fondo principal oscuro
-  text: palette.darkText,         // Texto principal claro
-  card: palette.darkCard,         // Tarjetas un poco más claras que el fondo
-  border: palette.darkBorder,     // Bordes sutiles
+  primary: palette.primary,   
+  secondary: palette.accent,  
+  background: palette.darkBg,   
+  text: palette.darkText,     
+  card: palette.darkCard,     
+  border: palette.darkBorder,   
   
   // Colores funcionales
   success: palette.primary,
@@ -63,7 +70,15 @@ export const darkColors = {
   warning: palette.yellow,
   info: palette.blue,
   accent: palette.purple,
+
+  // --- ✨ AÑADE ESTO (Colores de Estado) ---
+  successBg: palette.secondary, // '#156A40' (Tu verde oscuro de paleta)
+  successText: palette.highlight, // '#95EABF' (Tu verde claro de paleta)
+  errorBg: '#4a1e1e',         // Un rojo muy oscuro
+  errorText: palette.red,       // '#D64545' (Tu rojo brillante de paleta)
 };
+
+// ... (El resto de tu archivo 'export const Colors' sigue igual)
 
 // --- Exportación unificada ---
 export const Colors = {

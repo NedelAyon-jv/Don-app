@@ -1,8 +1,9 @@
 import { Colors } from '@/constants/theme'; // Importa tus colores
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
 import React, { useMemo, useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -45,10 +46,14 @@ export default function LoginScreen() {
         style={styles.container}>
 
         <View style={styles.content}>
-          <FontAwesome name="gift" size={60} color={theme.primary} style={styles.logo} />
+          {/* <FontAwesome name="gift" size={60} color={theme.primary} style={styles.logo} /> */}
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+          />
 
-          <Text style={styles.title}>Bienvenido a DonApp</Text>
-          <Text style={styles.subtitle}>Inicia sesión para donar e intercambiar.</Text>
+          <Text style={styles.title}>DonApp</Text>
+          <Text style={styles.subtitle}>Inicia sesión</Text>
 
           {/* ... (Inputs de email y contraseña) ... */}
           <View style={styles.inputContainer}>
@@ -126,18 +131,26 @@ const createStyles = (theme: typeof Colors.light) =>
       padding: 24,
     },
     content: {
-      flex: 1,
-      justifyContent: 'center',
+      flex: 2, // <-- Dale más espacio abajo
+      justifyContent: 'flex-start', // <-- Alineado arriba
+      alignItems: 'center',
+    },
+    logoContainer: {
+      flex: 1.2, // <-- Dale más espacio arriba
+      justifyContent: 'center', // Centrado
       alignItems: 'center',
     },
     logo: {
-      marginBottom: 20,
+      width: 200,
+      height: 200,
+      resizeMode: 'contain',
+      marginBottom: 20
     },
     title: {
       fontSize: 28,
       fontWeight: 'bold',
       color: theme.text,
-      marginBottom: 10,
+      marginBottom: 30,
     },
     subtitle: {
       fontSize: 16,
@@ -181,6 +194,7 @@ const createStyles = (theme: typeof Colors.light) =>
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
+      top: 25,
     },
     buttonText: {
       color: theme.background, // Usa el color de fondo para el texto
@@ -192,23 +206,24 @@ const createStyles = (theme: typeof Colors.light) =>
       color: theme.text,
       marginVertical: 25,
     },
-    socialContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 20,
-    },
-    socialButton: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderColor: theme.border,
-      borderWidth: 1,
-    },
+    // socialContainer: {
+    //   flexDirection: 'row',
+    //   justifyContent: 'center',
+    //   gap: 20,
+    // },
+    // socialButton: {
+    //   width: 60,
+    //   height: 60,
+    //   borderRadius: 30,
+    //   justifyContent: 'center',
+    //   alignItems: 'center',
+    //   borderColor: theme.border,
+    //   borderWidth: 1,
+    // },
     signupContainer: {
       padding: 10,
       alignItems: 'center',
+      top: -45,
     },
     signupText: {
       fontSize: 15,

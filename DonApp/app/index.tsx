@@ -48,7 +48,7 @@ export default function LoginScreen() {
         <View style={styles.content}>
           {/* <FontAwesome name="gift" size={60} color={theme.primary} style={styles.logo} /> */}
           <Image
-            source={require('@/assets/images/logo.png')}
+            source={require('@/assets/images/logo5.png')}
             style={styles.logo}
           />
 

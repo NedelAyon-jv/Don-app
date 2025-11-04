@@ -61,7 +61,7 @@ export default function SignUpScreen() {
           {/* <FontAwesome name="leaf" size={60} color={theme.primary} style={styles.logo} /> */}
           <View style={styles.logoContainer}>
             <Image
-              source={require('@/assets/images/logo.png')}
+              source={require('@/assets/images/logo5.png')}
               style={styles.logo}
             />
             <Text style={styles.logoTitle}>DonApp</Text>

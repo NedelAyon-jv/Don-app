@@ -1,9 +1,10 @@
 import { Colors } from '@/constants/theme';
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-  Alert, // <--- Importar Alert
+  Alert,
+  Image, // <--- Importar Alert
   KeyboardAvoidingView,
   Platform,
   ScrollView, // <--- Importar ScrollView
@@ -12,7 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -43,7 +44,7 @@ export default function SignUpScreen() {
       Alert.alert('Las contraseñas no coinciden', 'Por favor, verifica tu contraseña.');
       return;
     }
-    
+
     console.log('Registrando a:', { username, fullName: fullName, email, phone });
     // Si es exitoso, redirige a los tabs
     router.replace('/(tabs)');
@@ -54,10 +55,17 @@ export default function SignUpScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
-        
+
         {/* 3. CAMBIADO DE VIEW A SCROLLVIEW para un formulario largo */}
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <FontAwesome name="leaf" size={60} color={theme.primary} style={styles.logo} />
+          {/* <FontAwesome name="leaf" size={60} color={theme.primary} style={styles.logo} /> */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logo}
+            />
+            <Text style={styles.logoTitle}>DonApp</Text>
+          </View>
 
           <Text style={styles.title}>Crea tu cuenta</Text>
           <Text style={styles.subtitle}>Forma parte de la comunidad DonApp.</Text>
@@ -69,7 +77,7 @@ export default function SignUpScreen() {
             <MaterialCommunityIcons name="at" size={22} color={theme.text} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Usuario (ej: @andorei_j)"
+              placeholder="Usuario (ej: @username)"
               placeholderTextColor={theme.text}
               autoCapitalize="none"
               value={username}
@@ -158,14 +166,14 @@ export default function SignUpScreen() {
             <Text style={styles.footerLink}>Inicia sesión</Text>
           </Text>
         </TouchableOpacity>
-        
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 // 5. ESTILOS AJUSTADOS PARA SCROLLVIEW
-const createStyles = (theme: typeof Colors.light) => 
+const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -179,8 +187,24 @@ const createStyles = (theme: typeof Colors.light) =>
       padding: 24,
       alignItems: 'center', // Centra el logo, título y subtítulo
     },
+    logoContainer: {
+      flex: 1.2,
+      flexDirection: 'row',    // <--- 1. PONE LOS ITEMS LADO A LADO
+      justifyContent: 'center', // 2. CENTRA EL "PAR" (LOGO + TÍTULO)
+      alignItems: 'center',     // 3. ALINEA EL LOGO Y EL TÍTULO VERTICALMENTE
+      marginBottom: 20,         // 4. AÑADE ESPACIO ABAJO, ANTES DEL FORMULARIO
+    },
     logo: {
-      marginBottom: 20,
+      width: 55,
+      height: 55,
+      resizeMode: 'contain',
+      marginRight: 10,          // <--- 5. AÑADE ESPACIO ENTRE EL LOGO Y EL TÍTULO
+    },
+    logoTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: theme.text,
+      // (Quitamos el marginBottom de aquí, ya lo tiene el contenedor)
     },
     title: {
       fontSize: 28,

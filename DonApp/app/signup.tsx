@@ -24,9 +24,7 @@ export default function SignUpScreen() {
 
   // --- 1. ESTADOS ACTUALIZADOS ---
   const [username, setUsername] = useState('');
-  const [name, setName] = useState(''); // Renombrado de 'name'
-  const [primer_ap, setPrimerApellido] = useState('');
-  const [segundo_ap, setSegundoApellido] = useState('');
+  const [fullName, setFullName] = useState(''); // Renombrado de 'name'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,7 +34,7 @@ export default function SignUpScreen() {
   // --- 2. LÓGICA DE REGISTRO ACTUALIZADA ---
   const handleSignUp = () => {
     // Validación de campos vacíos
-    if (!username || !name || !email || !password || !confirmPassword || !phone) {
+    if (!username || !fullName || !email || !password || !confirmPassword || !phone) {
       Alert.alert('Campos incompletos', 'Por favor, completa todos los campos.');
       return;
     }
@@ -46,7 +44,7 @@ export default function SignUpScreen() {
       return;
     }
     
-    console.log('Registrando a:', { username, fullName: name, email, phone });
+    console.log('Registrando a:', { username, fullName: fullName, email, phone });
     // Si es exitoso, redirige a los tabs
     router.replace('/(tabs)');
   };
@@ -87,30 +85,8 @@ export default function SignUpScreen() {
               placeholder="Nombre(s)"
               placeholderTextColor={theme.text}
               autoCapitalize="words"
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <MaterialCommunityIcons name="account-outline" size={22} color={theme.text} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Primer Apellido"
-              placeholderTextColor={theme.text}
-              autoCapitalize="words"
-              value={name}
-              onChangeText={setPrimerApellido}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <MaterialCommunityIcons name="account-outline" size={22} color={theme.text} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Segundo Apellido (Opcional)"
-              placeholderTextColor={theme.text}
-              autoCapitalize="words"
-              value={name}
-              onChangeText={setSegundoApellido}
+              value={fullName}
+              onChangeText={setFullName}
             />
           </View>
 

@@ -9,7 +9,7 @@ import MapView, { Callout, Marker } from 'react-native-maps';
 const donationCenters = [
   {
     id: '1',
-    name: 'Centro Comunitario Camino Real',
+    name: 'Centro Donaciones Camino Real',
     colonia: 'Camino Real',
     status: 'Abierto',
     horario: 'L-V 9:00 AM - 5:00 PM',
@@ -17,7 +17,7 @@ const donationCenters = [
   },
   {
     id: '2',
-    name: 'Punto de Acopio Santa Fe',
+    name: 'Centro Donaciones Santa Fe',
     colonia: 'Santa Fe',
     status: 'Cerrado',
     horario: 'S 10:00 AM - 2:00 PM',
@@ -25,7 +25,7 @@ const donationCenters = [
   },
   {
     id: '3',
-    name: 'Oficina Central DonApp (Centro)',
+    name: 'Centro Donaciones Centro',
     colonia: 'Centro',
     status: 'Abierto',
     horario: 'L-S 8:00 AM - 6:00 PM',
@@ -33,7 +33,7 @@ const donationCenters = [
   },
   {
     id: '4',
-    name: 'Bodega Solidaria Indeco',
+    name: 'Centro Donaciones Indeco',
     colonia: 'Indeco',
     status: 'Abierto',
     horario: 'L-V 10:00 AM - 4:00 PM',
@@ -64,15 +64,20 @@ export default function DonationCentersScreen() {
       >
         {/* 5. Mapeamos los centros como "Marcadores" (Pins) */}
         {donationCenters.map((center) => (
+          // ... (dentro de tu return)
           <Marker
             key={center.id}
             coordinate={center.coordinate}
             title={center.name}
             description={center.colonia}
-            pinColor={theme.primary} // Usamos tu color primario para el pin
+            pinColor={theme.primary}
           >
             {/* 6. CALLOUT: La "burbuja" que sale al hacer clic */}
-            <Callout>
+
+            {/* --- ✨ ¡AÑADE ESTO! --- */}
+            <Callout tooltip={true}>
+              {/* --------------------- */}
+
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>{center.name}</Text>
                 <Text style={styles.calloutText}>{center.horario}</Text>
@@ -92,21 +97,31 @@ export default function DonationCentersScreen() {
 }
 
 // 7. ESTILOS ACTUALIZADOS
+// 7. ESTILOS ACTUALIZADOS
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.background,
     },
-    // El mapa DEBE tener este estilo para llenar la pantalla
     map: {
       ...StyleSheet.absoluteFillObject,
     },
-    // --- Estilos para la burbuja (Callout) ---
+
     calloutContainer: {
-      width: 220, // Ancho de la burbuja
-      padding: 5,
+      width: 220,
+      padding: 15,
+
+      // --- ✨ ESTA ES LA CORRECCIÓN MEJORADA ---
+      // Le damos el color de 'card' del tema.
+      backgroundColor: theme.card,
+
+      // --- ✨ MEJORA ADICIONAL ---
+      // Añadimos borderRadius para que tu View se vea
+      // bien dentro de la burbuja nativa redondeada.
+      borderRadius: 8,
     },
+
     calloutTitle: {
       fontSize: 16,
       fontWeight: 'bold',
@@ -119,6 +134,8 @@ const createStyles = (theme: typeof Colors.light) =>
       opacity: 0.8,
       marginBottom: 6,
     },
+
+    // --- Estilos de Status (Ahora leen del tema) ---
     statusText: {
       fontSize: 14,
       fontWeight: 'bold',
@@ -129,12 +146,14 @@ const createStyles = (theme: typeof Colors.light) =>
       textAlign: 'center',
     },
     statusOpen: {
-      backgroundColor: '#d4edda',
-      color: '#155724',
+      // ✨ ¡ACTUALIZADO!
+      backgroundColor: theme.successBg,
+      color: theme.successText,
     },
     statusClosed: {
-      backgroundColor: '#f8d7da',
-      color: '#721c24',
+      // ✨ ¡ACTUALIZADO!
+      backgroundColor: theme.errorBg,
+      color: theme.errorText,
     },
   });
 

@@ -67,7 +67,7 @@ export default function SignUpScreen() {
             <Text style={styles.logoTitle}>DonApp</Text>
           </View>
 
-          <Text style={styles.title}>Crea tu cuenta</Text>
+          <Text style={styles.title}>Registrarse</Text>
           <Text style={styles.subtitle}>Forma parte de la comunidad DonApp.</Text>
 
           {/* --- 4. NUEVOS INPUTS AÑADIDOS --- */}

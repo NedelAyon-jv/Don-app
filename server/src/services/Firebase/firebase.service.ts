@@ -306,13 +306,21 @@ export class FirebaseService {
     try {
       return this.db.collection(collectionPath).onSnapshot(
         (snapshot) => {
-          const docs = snapshot.docs.map(
-            (doc) =>
-              ({
-                id: doc.id,
-                ...doc.data(),
-              } as T)
-          );
+          const docs = snapshot.docs.map((doc) => {
+            const data = doc.data();
+
+            // Convert Firestore Timestamps to JavaScript Dates
+            Object.keys(data).forEach((key) => {
+              if (data[key] && typeof data[key].toDate === "function") {
+                data[key] = data[key].toDate();
+              }
+            });
+
+            return {
+              id: doc.id,
+              ...data,
+            } as T;
+          });
           callback(docs);
         },
         (error) => {
@@ -337,13 +345,19 @@ export class FirebaseService {
     try {
       const doc = await this.db.collection(collectionPath).doc(id).get();
       return doc.exists;
-    } catch(error) {
-      console.error(`Firestore exists check error in ${collectionPath}:`, error);
+    } catch (error) {
+      console.error(
+        `Firestore exists check error in ${collectionPath}:`,
+        error
+      );
       throw this.handleFirestoreError(error);
     }
   }
 
-  async count(collectionPath: string, conditions?: QueryOptions): Promise<number> {
+  async count(
+    collectionPath: string,
+    conditions?: QueryOptions
+  ): Promise<number> {
     try {
       let query: Query = this.db.collection(collectionPath);
 
@@ -353,7 +367,7 @@ export class FirebaseService {
 
       const snapshot = await query.get();
       return snapshot.size;
-    } catch(error) {
+    } catch (error) {
       console.error(`Firestore count error in ${collectionPath}:`, error);
       throw this.handleFirestoreError(error);
     }
@@ -377,22 +391,22 @@ export class FirebaseService {
     return new Error(error.message || "FIRESTORE_OPERATION_FAILED");
   }
 
-  async healthCheck(): Promise<{status: string, latency: number}> {
+  async healthCheck(): Promise<{ status: string; latency: number }> {
     const startTime = Date.now();
 
     try {
-      await this.db.collection('_health').doc('check').get();
+      await this.db.collection("_health").doc("check").get();
       const latency = Date.now() - startTime;
 
       return {
-        status: 'healthy',
-        latency
+        status: "healthy",
+        latency,
       };
-    } catch(error) {
+    } catch (error) {
       return {
-        status: 'unhealthy',
-        latency: Date.now() - startTime
-      }
+        status: "unhealthy",
+        latency: Date.now() - startTime,
+      };
     }
   }
 }

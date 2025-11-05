@@ -255,7 +255,7 @@ class BackendServer {
 
 📍 Environment: ${process.env.NODE_ENV || "development"}
 🌐 Server running on port: ${this.port}
-📡 WebSocket (Socket.IO) enabled // ← ADD THIS
+📡 WebSocket (Socket.IO) enabled
 📊 API Documentation: http://localhost:${this.port}/
 ❤️  Health Check: http://localhost:${this.port}/health
 🔍 Detailed Health: http://localhost:${this.port}/health/detailed

@@ -17,6 +17,7 @@ export class ChatController {
   async createConversation(req: Request, res: Response) {
     try {
       const userId = req.userId;
+      console.log(req.body);
       const validateData = parse(CreateConversationSchema, req.body);
 
       const conversationId = await chatService.createConversation(
@@ -275,7 +276,15 @@ export class ChatController {
       const { conversationId } = req.params;
       const userId = req.userId;
 
-      const conversation = await chatService.getConversation(conversationId!);
+      if (!conversationId) {
+        return res.status(400).json({
+          success: false,
+          error: "Conversation ID is required",
+        });
+      }
+
+      // Verify user has access to conversation
+      const conversation = await chatService.getConversation(conversationId);
       if (!conversation || !conversation.participants.includes(userId!)) {
         return res.status(403).json({
           success: false,
@@ -283,26 +292,66 @@ export class ChatController {
         });
       }
 
+      // Set SSE headers
       res.writeHead(200, {
         "Content-Type": "text/event-stream",
         Connection: "keep-alive",
         "Cache-Control": "no-cache",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       });
 
+      // Send initial connection message
+      res.write(
+        `data: ${JSON.stringify({
+          type: "connected",
+          message: "SSE connection established",
+          conversationId,
+        })}\n\n`
+      );
+
       const unsubscribe = chatService.subscribeToConversation(
-        conversationId!,
+        conversationId,
         (messages) => {
+          // Send messages as they come in
           res.write(
-            `data: ${JSON.stringify({ type: "messages", data: messages })}\n\n`
+            `data: ${JSON.stringify({
+              type: "messages",
+              data: messages,
+            })}\n\n`
           );
         }
       );
 
+      // Handle client disconnect
       req.on("close", () => {
+        console.log(`Client disconnected from conversation ${conversationId}`);
         unsubscribe();
         res.end();
       });
-    } catch (error) {}
+
+      // Keep connection alive with heartbeats
+      const heartbeat = setInterval(() => {
+        res.write(
+          `data: ${JSON.stringify({
+            type: "heartbeat",
+            timestamp: new Date().toISOString(),
+          })}\n\n`
+        );
+      }, 30000); // Every 30 seconds
+
+      req.on("close", () => {
+        clearInterval(heartbeat);
+        unsubscribe();
+        res.end();
+      });
+    } catch (error: any) {
+      console.error("Subscription error:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
   }
 }
 

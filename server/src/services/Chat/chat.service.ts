@@ -376,17 +376,34 @@ export class ChatService {
     conversationId: string,
     callback: (messages: ChatMessage[]) => void
   ): () => void {
+    console.log(`Setting up subscription for conversation: ${conversationId}`);
+
     return firestoreService.subscribeToCollection<ChatMessage>(
       this.MESSAGE_COLLECTION,
-      (message) => {
-        const conversationMessages = message
-          .filter((msg) => msg.conversationId === conversationId)
-          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      (messages) => {
+        console.log(`Received ${messages.length} messages from Firestore`);
 
+        const toJsDate = (val: any): Date => {
+          if (val instanceof Date) return val;
+          if (val && typeof val.toDate === "function") return val.toDate();
+          return new Date(val);
+        };
+
+        const conversationMessages = messages
+          .filter((msg) => msg.conversationId === conversationId)
+          .sort((a, b) => {
+            const timeA = toJsDate(a.createdAt).getTime();
+            const timeB = toJsDate(b.createdAt).getTime();
+            return timeA - timeB;
+          });
+
+        console.log(
+          `Filtered to ${conversationMessages.length} messages for conversation ${conversationId}`
+        );
         callback(conversationMessages);
       },
       (error) => {
-        console.error("CONVERSATION_SUBSCRIPTION_ERROR:", error);
+        console.error("Conversation subscription error:", error);
       }
     );
   }
@@ -407,9 +424,18 @@ export class ChatService {
       (conversations) => {
         const userConversations = conversations
           .filter((conv) => conv.participants.includes(userId))
-          .sort(
-            (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
-          );
+          .sort((a, b) => {
+            const toJsDate = (val: any): Date => {
+              if (val instanceof Date) return val;
+              if (val && typeof val.toDate === "function") return val.toDate();
+              return new Date(val);
+            };
+
+            const dateA = toJsDate(a.createdAt);
+            const dateB = toJsDate(b.createdAt);
+
+            return dateA.getTime() - dateB.getTime();
+          });
 
         callback(userConversations);
       },

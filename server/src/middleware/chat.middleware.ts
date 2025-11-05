@@ -1,6 +1,8 @@
 import type { Socket } from "socket.io";
 import { firebaseAdmin } from "../services";
 import type { NextFunction, Request, Response } from "express";
+import { JWTService } from "../services/User/JWT.service";
+import { UserService } from "../services/User/User.service";
 
 declare global {
   namespace Express {
@@ -65,15 +67,32 @@ export const chatAuthenticateFirebaseUser = async (
   next: NextFunction
 ) => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-      return res.status(401).json({ error: "Authentication token required" });
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authorization token is required" });
     }
 
-    const decodedToken = await firebaseAdmin.auth.verifyIdToken(token);
-    req.user = decodedToken;
-    req.userId = decodedToken.uid;
+    const token = authHeader.substring(7);
+    const payload = JWTService.verifyToken(token, "access");
+    const user = await UserService.getUserById(payload.sub);
+    
+    if (!user) {
+      return res.status(401).json({ error: "User account not found" });
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullname,
+      isVerified: user.isVerified,
+      profilePicture: user.profilePicture,
+      role: user.role || "user",
+    };
+
+    req.userId = user.id;
+    req.token = token;
 
     next();
   } catch (error) {

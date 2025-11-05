@@ -6,6 +6,8 @@ import express, {
 } from "express";
 import { firebaseAdmin } from "./src/services";
 import helmet from "helmet";
+import { createServer } from "http";
+import { socketService } from "./src/services/Chat/socket.service";
 import {
   CorsMiddleware,
   errorHandler,
@@ -18,19 +20,23 @@ import morgan from "morgan";
 import userRoutes from "./src/routes/user/user.router";
 import authRoutes from "./src/routes/user/auth.router";
 import publicationRoutes from "./src/routes/publications/publications.router";
+import chatRoutes from "./src/routes/chat/chat.router";
 
 class BackendServer {
   public app: Application;
   public port: string | number;
+  public server: any;
 
   constructor() {
     this.app = express();
     this.port = process.env.PORT || 3000;
+    this.server = createServer(this.app);
 
     this.initializeConfiguration();
     this.initializeFirebase();
     this.initializeMiddlewares();
     this.initializeRoutes();
+    this.initializeSocketIO();
     this.initializeErrorHandling();
     this.initializeHealthChecks();
   }
@@ -127,6 +133,7 @@ class BackendServer {
     this.app.use("/api/users", userRoutes);
     this.app.use("/api/auth", authRoutes);
     this.app.use("/api/publications", publicationRoutes);
+    this.app.use("/api/chat", chatRoutes);
 
     // Root endpoint
     this.app.get("/", (req: Request, res: Response) => {
@@ -144,6 +151,11 @@ class BackendServer {
     });
 
     console.log("✅ Routes initialized");
+  }
+
+  private initializeSocketIO(): void {
+    socketService.initialize(this.server);
+    console.log("✅ Socket.IO initialized");
   }
 
   private initializeErrorHandling(): void {
@@ -237,18 +249,19 @@ class BackendServer {
   }
 
   public start(): void {
-    this.app.listen(this.port, () => {
+    this.server.listen(this.port, () => {
       console.log(`
 🚀 Marketplace Backend API Server Started!
 
 📍 Environment: ${process.env.NODE_ENV || "development"}
 🌐 Server running on port: ${this.port}
+📡 WebSocket (Socket.IO) enabled
 📊 API Documentation: http://localhost:${this.port}/
 ❤️  Health Check: http://localhost:${this.port}/health
 🔍 Detailed Health: http://localhost:${this.port}/health/detailed
 
 ⏰ Started at: ${new Date().toISOString()}
-      `);
+    `);
     });
   }
 }

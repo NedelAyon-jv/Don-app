@@ -20,9 +20,17 @@ class APIClient {
     // Interceptor de solicitud
     this.client.interceptors.request.use(
       async (config) => {
+        // Asegurar que config.headers existe
+        config.headers = config.headers || {};
+        
         const token = await AsyncStorage.getItem("accessToken");
         if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+          config.headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        // Asegurar Content-Type
+        if (!config.headers["Content-Type"]) {
+          config.headers["Content-Type"] = "application/json";
         }
 
         console.log(

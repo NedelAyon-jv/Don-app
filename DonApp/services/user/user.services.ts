@@ -12,15 +12,15 @@ export interface RegisterData {
 export const registerUser = async (data: RegisterData) => {
   try {
     const response: any = await apiClient.post("/auth/register", data);
-
-    const token = response?.data?.token?.accessToken;
+    // `apiClient.post` ya devuelve `response.data`, así que `response` es el body
+    const token = response?.token?.accessToken;
     if (token) {
       await AsyncStorage.setItem("accessToken", token);
       console.log("🔑 Token guardado en AsyncStorage");
     }
 
-    console.log("✅ Usuario registrado:", response.data.user);
-    return response.data;
+    console.log("✅ Usuario registrado:", response.user);
+    return response;
   } catch (error) {
     console.error("❌ Error al registrar usuario:", error);
     throw error;
@@ -41,14 +41,14 @@ export const registerAdmin = async (data: AdminRegisterData) => {
     const response: any = await apiClient.post("/auth/register/admin", data);
 
     // Guardar token en AsyncStorage si se devuelve uno
-    const token = response?.data?.token?.accessToken;
+    const token = response?.token?.accessToken;
     if (token) {
       await AsyncStorage.setItem("accessToken", token);
       console.log("🔑 Token de admin guardado en AsyncStorage");
     }
 
-    console.log("✅ Admin registrado:", response.data.user);
-    return response.data;
+    console.log("✅ Admin registrado:", response.user);
+    return response;
   } catch (error) {
     console.error("❌ Error al registrar admin:", error);
     throw error;
@@ -72,7 +72,7 @@ export interface AuthMeData {
  */
 export const authMe = async (data: AuthMeData) => {
   try {
-    const response = await apiClient.post("/auth/me", data);
+    const response: any = await apiClient.post("/auth/me", data);
     console.log("✅ Respuesta de /auth/me:", response);
     return response;
   } catch (error) {
@@ -82,14 +82,9 @@ export const authMe = async (data: AuthMeData) => {
 };
 
 
-await AsyncStorage.setItem(
-  "accessToken",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpT09qd1BPdzF1dmRRbkRwUDBSUCIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzYxOTU5MzUwLCJleHAiOjE3NjE5NjAyNTAsImp0aSI6ImY2OTJiNGEwNTg0MDQwODQ4NzQ4MWQ5ODNlNDFhY2Q0IiwiYXVkIjoiZG9uLWFwcC11c2VycyIsImlzcyI6ImRvbi1hcHAifQ.Gp7llNrSPm-gQWYn7x3gGYtvv77-E8cGcylfOo0Jvjk"
-);
-
 export const verifyEmail = async (userId: string) => {
   try {
-    const response = await apiClient.post("/auth/verify-email", { userId });
+    const response: any = await apiClient.post("/auth/verify-email", { userId });
     console.log("✅ Correo verificado:", response);
     return response;
   } catch (error) {
@@ -97,3 +92,52 @@ export const verifyEmail = async (userId: string) => {
     throw error;
   }
 };
+
+//Ge current user profile 
+export const getUserProfile = async () => {
+  try {
+    const response: any = await apiClient.get("/users/profile");
+    console.log("✅ Perfil obtenido:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Error al obtener perfil:", error);
+    throw error;
+  }
+};
+
+//Get user by id
+export const getUserById = async (userId: string) => {
+  try {
+    const response: any = await apiClient.get(`/users/${userId}`);
+    console.log("✅ Usuario obtenido por ID:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Error al obtener usuario por ID:", error);
+    throw error;
+  }
+};
+
+
+//user by id Copy
+export const getUserByIdCopy = async (userId: string) => {
+  try {
+    const response: any = await apiClient.get(`/users/${userId}`); // Cambio aquí
+    console.log("✅ Usuario obtenido por ID:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Error al obtener usuario por ID:", error);
+    throw error;
+  }
+};
+
+//PUT update user profile
+export const updateUserProfile = async (data: Partial<AuthMeData>) => {
+  try {
+    const response: any = await apiClient.put("/users/profile", data); // Cambio aquí para actualizar el perfil
+    console.log("✅ Perfil actualizado:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Error al actualizar perfil:", error);
+    throw error;
+  }
+};  

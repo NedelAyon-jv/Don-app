@@ -1,56 +1,46 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import FormData from "form-data";
 import { apiClient } from "../API.services";
+
+export interface PublicationLocation {
+  latitude: number;
+  longitude: number;
+  address: string;
+}
 
 export interface PublicationData {
   title: string;
   description: string;
-  type: string;
+  type: "donation_offer" | "donation_request";
   category: string;
-  condition: string;
-  quantity: number;
-  availability: string;
-  pickupRequirements: string;
-  location: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  };
-  tags: string[];
+  condition?: string;
+  quantity?: number;
+  availability?: string;
+  pickupRequirements?: string;
+  location: PublicationLocation;
+  tags?: string[];
 }
 
 export const createPublication = async (
   publicationData: PublicationData,
-  imagesUri: string[]
+  imageUris: string[]
 ) => {
   try {
     const token = await AsyncStorage.getItem("accessToken");
     if (!token) throw new Error("No hay token guardado");
 
     const formData = new FormData();
+
+    // ✅ Mandamos el objeto convertido a string
     formData.append("publicationData", JSON.stringify(publicationData));
 
-    // Adjuntar imágenes
-    imagesUri.forEach((uri, index) => {
+    // ✅ Agregar imágenes
+    imageUris.forEach((uri: string) => {
       formData.append("images", {
         uri,
-        name: `image_${index}.jpg`,
-        type: "image/jpeg",
+        type: "image/jpeg", // o image/png, depende de la extensión
+        name: uri.split("/").pop() || "image.jpg",
       } as any);
     });
 
-    const response: any = await apiClient.post("/publications/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    });
 
-    console.log("✅ Publicación creada correctamente:", response);
-    return response;
-
-  } catch (error) {
-    console.error("❌ Error al crear la publicación:", error);
-    throw error;
-  }
-};
-    

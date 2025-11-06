@@ -9,6 +9,9 @@ export interface RegisterData {
   phone: string;
 }
 
+const API_URL = "https://don-app.onrender.com/api"; // Reemplaza con la URL real de tu API
+
+// USER
 export const registerUser = async (data: RegisterData) => {
   try {
     const response: any = await apiClient.post("/auth/register", data);
@@ -26,6 +29,42 @@ export const registerUser = async (data: RegisterData) => {
     throw error;
   }
 };
+
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error al iniciar sesión:", error);
+    throw error;
+  }
+};
+
+//guardar token
+export const saveSession = async (token: string, user: any) => {
+  await AsyncStorage.setItem("token", token);
+  await AsyncStorage.setItem("user", JSON.stringify(user));
+}
+
+//obtener token
+export const gettoken = async () => {
+  const token = await AsyncStorage.getItem("token");
+  return token;
+}
+
+//cerrar sesion
+export const logoutUser = async () => {
+  await AsyncStorage.removeItem("token");
+  await AsyncStorage.removeItem("user");
+}
+
 
 // ADMIN
 export interface AdminRegisterData {

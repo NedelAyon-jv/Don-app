@@ -33,7 +33,7 @@ export default function SignUpScreen() {
   // ---------------------------------
 
   // --- 2. LÓGICA DE REGISTRO ACTUALIZADA ---
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     // Validación de campos vacíos
     if (!username || !fullName || !email || !password || !confirmPassword || !phone) {
       Alert.alert('Campos incompletos', 'Por favor, completa todos los campos.');

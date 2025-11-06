@@ -1,8 +1,10 @@
 import { Colors } from '@/constants/theme'; // Importa tus colores
+import { loginUser } from "@/services/user/user.services"; // Asegúrate de importar la función loginUser
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
 import React, { useMemo, useState } from 'react';
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -24,20 +26,27 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    // --- VALIDACIÓN DESACTIVADA PARA PRUEBAS DE NAVEGACIÓN ---
-    /*
-    if (!email || !password) {
-      Alert.alert('Campos incompletos', 'Por favor, ingresa correo y contraseña.');
-      return;
-    }
-    console.log('Login con:', email, password);
-    */
+ const handleLogin = async () => {
+  if (!email || !password) {
+    Alert.alert("Campos incompletos", "Ingresa tu email y contraseña");
+    return;
+  }
 
-    // Si es exitoso (o para pruebas), redirige a los tabs
-    console.log('Navegando a /Tabs...');
-    router.replace('/(tabs)');
-  };
+  const res = await loginUser(email, password);
+
+  if (res.error || !res.token) {
+    Alert.alert("Credenciales incorrectas", "Email o contraseña incorrectos");
+    return;
+  }
+
+  console.log("TOKEN:", res.token);
+  console.log("Usuario:", res.user);
+
+  Alert.alert("Bienvenido", "Inicio de sesión exitoso");
+
+  router.replace("/(tabs)");
+};
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

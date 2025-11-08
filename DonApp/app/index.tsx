@@ -1,7 +1,11 @@
-import { Colors } from '@/constants/theme'; // Importa tus colores
-import { loginUser } from "@/services/user/user.services"; // Asegúrate de importar la función loginUser
+import { Colors } from '@/constants/theme';
+// ==============================================
+// ==== ¡CAMBIO DE IMPORTACIÓN! ====
+// Ya no usamos 'user.services', usamos 'auth.services'
+import { login } from "@/services/user/auth.services";
+// ==============================================
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // <-- 1. IMPORTAR ROUTER
+import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
@@ -21,7 +25,7 @@ export default function LoginScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const router = useRouter(); // <-- 2. INICIALIZAR ROUTER
+  const router = useRouter(); 
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,19 +36,34 @@ export default function LoginScreen() {
     return;
   }
 
-  const res = await loginUser(email, password);
+  try {
+    // ==============================================
+    // ==== ¡LÓGICA ACTUALIZADA! ====
+    // 1. Llamamos a 'login' (del nuevo auth.services)
+    // 2. 'login' ya guarda el token y el usuario en AsyncStorage por nosotros
+    // ==============================================
+    const res = await login({ email, password });
 
-  if (res.error || !res.token) {
-    Alert.alert("Credenciales incorrectas", "Email o contraseña incorrectos");
-    return;
+    // 'res' es la respuesta de la API. Asumimos que si hay error,
+    // 'apiClient' lanza una excepción (manejada por el catch).
+    // Si la API devuelve un error 200 con un flag, lo comprobamos:
+    if (res.error || !res.token) {
+      Alert.alert("Credenciales incorrectas", res.message || "Email o contraseña incorrectos");
+      return;
+    }
+
+    console.log("TOKEN:", res.token);
+    console.log("Usuario:", res.user);
+
+    Alert.alert("Bienvenido", "Inicio de sesión exitoso");
+
+    router.replace("/(tabs)");
+
+  } catch (error: any) {
+    // Si 'apiClient' lanza un error (ej. 401, 404, 500)
+    console.error("Error en handleLogin:", error);
+    Alert.alert("Error", error.message || "Email o contraseña incorrectos");
   }
-
-  console.log("TOKEN:", res.token);
-  console.log("Usuario:", res.user);
-
-  Alert.alert("Bienvenido", "Inicio de sesión exitoso");
-
-  router.replace("/(tabs)");
 };
 
 
@@ -55,7 +74,6 @@ export default function LoginScreen() {
         style={styles.container}>
 
         <View style={styles.content}>
-          {/* <FontAwesome name="gift" size={60} color={theme.primary} style={styles.logo} /> */}
           <Image
             source={require('@/assets/images/logo5.png')}
             style={styles.logo}
@@ -97,17 +115,6 @@ export default function LoginScreen() {
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Iniciar Sesión</Text>
           </TouchableOpacity>
-
-          {/* ... (Separador y botones sociales) ... */}
-          {/* <Text style={styles.separator}>O inicia sesión con</Text>
-          <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="google" size={24} color={theme.text} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="apple" size={26} color={theme.text} />
-            </TouchableOpacity>
-          </View> */}
         </View>
 
         {/* ============================================== */}
@@ -129,6 +136,7 @@ export default function LoginScreen() {
 }
 
 // (Todos los estilos... 'createStyles')
+// ... (Tu código de estilos va aquí)
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
@@ -215,20 +223,6 @@ const createStyles = (theme: typeof Colors.light) =>
       color: theme.text,
       marginVertical: 25,
     },
-    // socialContainer: {
-    //   flexDirection: 'row',
-    //   justifyContent: 'center',
-    //   gap: 20,
-    // },
-    // socialButton: {
-    //   width: 60,
-    //   height: 60,
-    //   borderRadius: 30,
-    //   justifyContent: 'center',
-    //   alignItems: 'center',
-    //   borderColor: theme.border,
-    //   borderWidth: 1,
-    // },
     signupContainer: {
       padding: 10,
       alignItems: 'center',
@@ -243,4 +237,3 @@ const createStyles = (theme: typeof Colors.light) =>
       fontWeight: 'bold',
     },
   });
-

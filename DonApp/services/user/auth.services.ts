@@ -1,75 +1,240 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiClient } from "../API.services";
+import { apiClient } from "../API.services"; // Asumo que API.services está un nivel arriba
+
+// ==============================================
+// ==== INTERFACES DE AUTENTICACIÓN ====
+// ==============================================
 
 export interface LoginData {
   email: string;
   password: string;
 }
-//Login
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  username: string;
+  fullname: string;
+  phone: string;
+}
+
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// ==============================================
+// ==== FUNCIONES DE SESIÓN (TOKEN Y USUARIO) ====
+// ==============================================
+
+/**
+ * Guarda el token y el usuario en AsyncStorage
+ */
+export const saveSession = async (accessToken: string, refreshToken: string, user: any) => {
+  try {
+    await AsyncStorage.setItem("accessToken", accessToken);
+    await AsyncStorage.setItem("refreshToken", refreshToken); // <-- AÑADE ESTA LÍNEA
+    await AsyncStorage.setItem("user", JSON.stringify(user));
+    console.log("🔑✅ Sesión guardada (accessToken, refreshToken y usuario)");
+  } catch (error) {
+    console.error("❌ Error al guardar la sesión:", error);
+  }
+};
+
+/**
+ * Obtiene el token guardado
+ */
+export const gettoken = async () => {
+  try {
+    const token = await AsyncStorage.getItem("accessToken");
+    return token;
+  } catch (error) {
+    console.error("❌ Error al obtener el token:", error);
+    return null;
+  }
+};
+
+/**
+ * Obtiene el usuario guardado
+ */
+export const getCurrentUser = async () => {
+  try {
+    const userString = await AsyncStorage.getItem("user");
+    return userString ? JSON.parse(userString) : null;
+  } catch (error) {
+    console.error("❌ Error al obtener el usuario:", error);
+    return null;
+  }
+};
+
+/**
+ * Limpia la sesión (token y usuario)
+ */
+export const logout = async () => {
+  try {
+    await AsyncStorage.removeItem("accessToken");
+    await AsyncStorage.removeItem("refreshToken"); // <-- AÑADE ESTA LÍNEA
+    await AsyncStorage.removeItem("user");
+    console.log("🚪 Sesión cerrada (tokens y usuario eliminados)");
+  } catch (error) {
+    console.error("❌ Error al cerrar sesión:", error);
+    throw error;
+  }
+};
+
+// ==============================================
+// ==== FUNCIONES DE AUTENTICACIÓN (API) ====
+// ==============================================
+
+/**
+ * (MEJORADO) Inicia sesión y guarda la sesión si tiene éxito
+ */
+// ==============================================
+// ==== FUNCIONES DE AUTENTICACIÓN (API) ====
+// ==============================================
+
+/**
+ * (MEJORADO) Inicia sesión y guarda la sesión si tiene éxito
+ */
 export const login = async (data: LoginData) => {
   try {
-    const response: any = await apiClient.post("/auth/login", {
-      email: data.email,
-      password: data.password,
-    });
+    // Usamos apiClient en lugar de fetch
+    const response: any = await apiClient.post("/auth/login", data);
 
-    console.log("✅ Login exitoso:", response);
+    // 'response' es el objeto COMPLETO que vimos en el log
+    console.log("✅ Login exitoso (Respuesta API completa):", response);
 
-    const maybeToken =
-      response?.access_token || response?.accessToken || response?.token || response?.token?.accessToken || response?.token?.access_token;
+    // ==============================================
+    // ==== ¡ESTA ES LA CORRECCIÓN! ====
+    // Accedemos a la data anidada que viste en el log
+    // ==============================================
+    const accessToken = response?.data?.token?.accessToken;
+    const refreshToken = response?.data?.token?.refreshToken;
+    const user = response?.data?.user;
 
-    let tokenToStore: string | undefined;
-    if (typeof maybeToken === "string") {
-      tokenToStore = maybeToken;
-    } else if (maybeToken && typeof maybeToken === "object") {
-      tokenToStore = maybeToken.accessToken || maybeToken.access_token;
+    if (accessToken && user && refreshToken) {
+      // Guardamos la sesión completa
+      await saveSession(accessToken, refreshToken, user);
+    } else {
+      // Si esto vuelve a salir, es que la API cambió su respuesta
+      console.warn("⚠️ Login exitoso pero no se encontró accessToken, refreshToken o usuario en la respuesta anidada");
     }
 
-    if (tokenToStore) {
-      await AsyncStorage.setItem("accessToken", tokenToStore);
-      console.log("🔑 Token guardado en AsyncStorage");
-    }
+    // ==============================================
+    // ¡IMPORTANTE! Devolvemos 'response.data'
+    // para que el 'index.tsx' pueda usar 'res.token' y 'res.user'
+    // ==============================================
+    return response.data; 
 
-    return response;
   } catch (error) {
     console.error("❌ Error en login:", error);
     throw error;
   }
 };
 
-//Refresh token
+/**
+ * (MOVIDO AQUÍ) Registra un nuevo usuario
+ */
+// ... (el resto de tu archivo auth.services.ts) ...
+
+/**
+ * (MOVIDO AQUÍ Y CORREGIDO) Registra un nuevo usuario
+ */
+export const registerUser = async (data: RegisterData) => {
+  try {
+    const response: any = await apiClient.post("/auth/register", data);
+
+    // ==============================================
+    // ==== ¡CORRECCIÓN! ====
+    // Leemos la misma estructura que en el login
+    // ==============================================
+    const accessToken = response?.data?.token?.accessToken;
+    const refreshToken = response?.data?.token?.refreshToken;
+    const user = response?.data?.user;
+
+    if (accessToken && refreshToken && user) {
+      // Guardamos la sesión automáticamente al registrarse
+      // Ahora con los 3 argumentos correctos
+      await saveSession(accessToken, refreshToken, user);
+    } else {
+      console.warn("⚠️ Registro exitoso pero no se encontró accessToken, refreshToken o usuario en la respuesta");
+    }
+    // ==============================================
+
+    console.log("✅ Usuario registrado:", response.data?.user || response);
+    
+    // Devolvemos .data, igual que en el login
+    return response.data; 
+  } catch (error) {
+    console.error("❌ Error al registrar usuario:", error);
+    throw error;
+  }
+};
+
+/**
+ * (MOVIDO AQUÍ Y CORREGIDO) Registra un nuevo admin
+ */
+export const registerAdmin = async (data: RegisterData) => {
+  try {
+    const response: any = await apiClient.post("/auth/register/admin", data);
+
+    // ==============================================
+    // ==== ¡CORRECCIÓN! ====
+    // Leemos la misma estructura que en el login
+    // ==============================================
+    const accessToken = response?.data?.token?.accessToken;
+    const refreshToken = response?.data?.token?.refreshToken;
+    const user = response?.data?.user;
+
+    if (accessToken && refreshToken && user) {
+      // Guardamos la sesión automáticamente al registrarse
+      // Ahora con los 3 argumentos correctos
+      await saveSession(accessToken, refreshToken, user);
+      console.log("🔑 Token de admin guardado en AsyncStorage");
+    } else {
+       console.warn("⚠️ Registro de admin exitoso pero no se encontró accessToken, refreshToken o usuario");
+    }
+    // ==============================================
+
+    console.log("✅ Admin registrado:", response.data?.user || response);
+    
+    // Devolvemos .data, igual que en el login
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error al registrar admin:", error);
+    throw error;
+  }
+};
+
+// ... (el resto de tus funciones: refreshToken, changePassword, etc.) ...
+
+/**
+ * (Se mantiene) Refresca el token
+ */
 export const refreshToken = async () => {
-   try {
-    const refreshToken = await AsyncStorage.getItem("refreshToken");
+  try {
+    // NOTA: Deberías considerar guardar también el 'refreshToken' durante el login
+    const refreshToken = await AsyncStorage.getItem("refreshToken"); 
 
     if (!refreshToken) {
       throw new Error("No hay refresh token guardado");
     }
 
     const response: any = await apiClient.post("/auth/refresh-token", {
-      refreshToken, // cuerpo del POST
+      refreshToken,
     });
 
     console.log("✅ Nuevo token generado:", response);
 
-    // Guardar tokens nuevos (manejar varias formas de respuesta)
-    const accessFromRoot = response?.access_token || response?.accessToken;
-    const refreshFromRoot = response?.refresh_token || response?.refreshToken;
-
-    if (accessFromRoot) {
-      await AsyncStorage.setItem("accessToken", accessFromRoot);
-    } else if (response?.token) {
-      const tokenObj = response.token as any;
-      const maybeAccess = tokenObj?.accessToken || tokenObj?.access_token;
-      if (maybeAccess) await AsyncStorage.setItem("accessToken", maybeAccess);
+    const newAccessToken = response?.accessToken; // Ajusta según tu API
+    if (newAccessToken) {
+      await AsyncStorage.setItem("accessToken", newAccessToken);
     }
-
-    if (refreshFromRoot) {
-      await AsyncStorage.setItem("refreshToken", refreshFromRoot);
-    } else if (response?.token) {
-      const tokenObj = response.token as any;
-      const maybeRefresh = tokenObj?.refreshToken || tokenObj?.refresh_token;
-      if (maybeRefresh) await AsyncStorage.setItem("refreshToken", maybeRefresh);
+    
+    // Si tu API devuelve un nuevo refresh token, guárdalo también
+    const newRefreshToken = response?.refreshToken;
+    if (newRefreshToken) {
+      await AsyncStorage.setItem("refreshToken", newRefreshToken);
     }
 
     return response;
@@ -79,38 +244,30 @@ export const refreshToken = async () => {
   }
 };
 
-// Logout
-export const logout = async () => {
-  try {
-    await AsyncStorage.removeItem("accessToken");
-    console.log("🚪 Sesión cerrada");
-  } catch (error) {
-    console.error("❌ Error al cerrar sesión:", error);
-    throw error;
-  }
-};   
-
-// change password
-export interface ChangePasswordData {
-  currentPassword: string;
-  newPassword: string;
-}
-
+/**
+ * (Se mantiene) Cambia la contraseña
+ */
 export const changePassword = async (data: ChangePasswordData) => {
   try {
-    const accessToken = await AsyncStorage.getItem("accessToken");
-
-    if (!accessToken) {
-      throw new Error("No hay token de sesión guardado");
-    }
-
     const response: any = await apiClient.post("/auth/change-password", data);
-
-    console.log("✅ Contraseña cambiada:", response.data);
-    return response.data;
-
+    console.log("✅ Contraseña cambiada:", response);
+    return response;
   } catch (error) {
     console.error("❌ Error al cambiar la contraseña:", error);
+    throw error;
+  }
+};
+
+/**
+ * (MOVIDO AQUÍ) Verifica el email
+ */
+export const verifyEmail = async (userId: string) => {
+  try {
+    const response: any = await apiClient.post("/auth/verify-email", { userId });
+    console.log("✅ Correo verificado:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Error al verificar correo:", error);
     throw error;
   }
 };

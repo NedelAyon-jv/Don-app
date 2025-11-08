@@ -1,13 +1,17 @@
 import { Colors } from '@/constants/theme';
+// ==============================================
+// ==== 1. IMPORTAR EL SERVICIO DE REGISTRO ====
+// ==============================================
+import { registerUser } from '@/services/user/auth.services';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
-  Image, // <--- Importar Alert
+  Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView, // <--- Importar ScrollView
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -23,32 +27,66 @@ export default function SignUpScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
 
-  // --- 1. ESTADOS ACTUALIZADOS ---
+  // --- Estados (Están perfectos como los tenías) ---
   const [username, setUsername] = useState('');
-  const [fullName, setFullName] = useState(''); // Renombrado de 'name'
+  const [fullName, setFullName] = useState(''); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   // ---------------------------------
 
-  // --- 2. LÓGICA DE REGISTRO ACTUALIZADA ---
+  // ==============================================
+  // ==== 2. LÓGICA DE REGISTRO ACTUALIZADA ====
+  // ==============================================
   const handleSignUp = async () => {
-    // Validación de campos vacíos
+    // Validación de campos vacíos (¡Esto está perfecto!)
     if (!username || !fullName || !email || !password || !confirmPassword || !phone) {
       Alert.alert('Campos incompletos', 'Por favor, completa todos los campos.');
       return;
     }
-    // Validación de contraseñas
+    // Validación de contraseñas (¡Perfecto!)
     if (password !== confirmPassword) {
       Alert.alert('Las contraseñas no coinciden', 'Por favor, verifica tu contraseña.');
       return;
     }
 
-    console.log('Registrando a:', { username, fullName: fullName, email, phone });
-    // Si es exitoso, redirige a los tabs
-    router.replace('/(tabs)');
+    // --- Inicio de la lógica de API ---
+    try {
+      // 1. Preparamos los datos para la API
+      // Nota: tu estado 'fullName' se mapea a 'fullname' en la API
+      const data = {
+        username: username,
+        fullname: fullName, 
+        email: email,
+        password: password,
+        phone: phone
+      };
+
+      console.log('Enviando datos de registro a la API...', data);
+
+      // 2. Llamamos al servicio
+      // Recuerda: 'registerUser' ya guarda la sesión (token y user)
+      // en AsyncStorage si el registro es exitoso.
+      await registerUser(data);
+
+      // 3. Si todo salió bien, mostramos éxito y navegamos
+      Alert.alert(
+        '¡Bienvenido!',
+        'Tu cuenta ha sido creada exitosamente.'
+      );
+      router.replace('/(tabs)'); // Redirige al home
+
+    } catch (error: any) {
+      // 4. Si la API devuelve un error (ej: email ya existe, error 500)
+      console.error('❌ Error en handleSignUp (Registro):', error);
+      Alert.alert(
+        'Error al registrar',
+        error.message || 'No se pudo crear la cuenta. Verifica tus datos e intenta de nuevo.'
+      );
+    }
   };
+  // --- Fin de la lógica de API ---
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -56,9 +94,8 @@ export default function SignUpScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
 
-        {/* 3. CAMBIADO DE VIEW A SCROLLVIEW para un formulario largo */}
+        {/* El resto de tu JSX está perfecto, no necesita cambios */}
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* <FontAwesome name="leaf" size={60} color={theme.primary} style={styles.logo} /> */}
           <View style={styles.logoContainer}>
             <Image
               source={require('@/assets/images/logo5.png')}
@@ -69,8 +106,6 @@ export default function SignUpScreen() {
 
           <Text style={styles.title}>Registrarse</Text>
           <Text style={styles.subtitle}>Forma parte de la comunidad DonApp.</Text>
-
-          {/* --- 4. NUEVOS INPUTS AÑADIDOS --- */}
 
           {/* Input Usuario */}
           <View style={styles.inputContainer}>
@@ -172,7 +207,7 @@ export default function SignUpScreen() {
   );
 }
 
-// 5. ESTILOS AJUSTADOS PARA SCROLLVIEW
+// (Tus estilos están perfectos, no se tocan)
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
@@ -182,29 +217,27 @@ const createStyles = (theme: typeof Colors.light) =>
     container: {
       flex: 1,
     },
-    // Contenedor del Scroll
     scrollContent: {
       padding: 24,
-      alignItems: 'center', // Centra el logo, título y subtítulo
+      alignItems: 'center', 
     },
     logoContainer: {
       flex: 1.2,
-      flexDirection: 'row',    // <--- 1. PONE LOS ITEMS LADO A LADO
-      justifyContent: 'center', // 2. CENTRA EL "PAR" (LOGO + TÍTULO)
-      alignItems: 'center',     // 3. ALINEA EL LOGO Y EL TÍTULO VERTICALMENTE
-      marginBottom: 20,         // 4. AÑADE ESPACIO ABAJO, ANTES DEL FORMULARIO
+      flexDirection: 'row',    
+      justifyContent: 'center', 
+      alignItems: 'center',     
+      marginBottom: 20,         
     },
     logo: {
       width: 55,
       height: 55,
       resizeMode: 'contain',
-      marginRight: 10,          // <--- 5. AÑADE ESPACIO ENTRE EL LOGO Y EL TÍTULO
+      marginRight: 10,          
     },
     logoTitle: {
       fontSize: 22,
       fontWeight: 'bold',
       color: theme.text,
-      // (Quitamos el marginBottom de aquí, ya lo tiene el contenedor)
     },
     title: {
       fontSize: 28,
@@ -268,4 +301,3 @@ const createStyles = (theme: typeof Colors.light) =>
       fontWeight: 'bold',
     },
   });
-

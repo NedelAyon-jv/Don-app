@@ -69,7 +69,7 @@ class APIClient {
     return response.data;
   }
 
-  async post<T>(url: string, data?: any): Promise<T> {
+  async post<T>(url: string, data?: any, p0?: { headers: { "Content-Type": string; Authorization: string; }; }): Promise<T> {
     const response = await this.client.post<T>(url, data);
     return response.data;
   }

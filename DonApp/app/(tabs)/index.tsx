@@ -19,13 +19,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- 1. Datos Estáticos (Maqueta) ---
 // (Sin cambios)
-const mockFeedData = [
-  { id: '1', title: 'Silla de oficina', type: 'Trueque', imageUrl: 'https...Silla', location: 'Centro', category: 'Muebles' },
-  { id: '2', title: 'Monitor 24"', type: 'Donación', imageUrl: 'https...Monitor', location: 'Camino Real', category: 'Electrónica' },
-  { id: '3', title: 'Despensa básica', type: 'Donación', imageUrl: 'https...Alimentos', location: 'Santa Fe', category: 'Alimentos' },
-  { id: '4', title: 'Bicicleta R26', type: 'Trueque', imageUrl: 'https...Bici', location: 'Indeco', category: 'Otros' },
-  { id: '5', title: 'Chamarras (lote)', type: 'Donación', imageUrl: 'https...Ropa', location: 'Centro', category: 'Ropa' },
-  { id: '6', title: 'Lámpara de escritorio', type: 'Donación', imageUrl: 'https...Lampara', location: 'Camino Real', category: 'Muebles' },
+type ArticleData = {
+  id: string;
+  title: string;
+  type: 'Donación' | 'Trueque';
+  imageUrl: string;
+  location: string;
+  category: string;
+};
+
+const mockFeedData: ArticleData[] = [
+  { id: '1', title: 'Silla de oficina', type: 'Trueque', imageUrl: 'https://iseating.com.mx/cdn/shop/files/Silla_de_oficina_Ejecutiva_Caselli_C.jpg?v=1739427495&width=2048', location: 'Centro', category: 'Muebles' },
+  { id: '2', title: 'Monitor 24"', type: 'Donación', imageUrl: 'https://i5.walmartimages.com/asr/34ea678d-b9ac-42bf-a983-f35076f79bde.6e32e9fe3ce59b318fca816bae8f8180.jpeg', location: 'Camino Real', category: 'Electrónica' },
+  { id: '3', title: 'Despensa básica', type: 'Donación', imageUrl: 'https://i5.walmartimages.com/asr/ccdff1ec-0ff0-46a7-a76c-5ed3d4d7df62.f06021d80c694b4c7d38ad5760e71213.jpeg', location: 'Santa Fe', category: 'Alimentos' },
+  { id: '4', title: 'Bicicleta R26', type: 'Trueque', imageUrl: 'https://www.costco.com.mx/medias/sys_master/products/hdf/h38/204420032593950.jpg', location: 'Indeco', category: 'Otros' },
+  { id: '5', title: 'Chamarras (lote)', type: 'Donación', imageUrl: 'https://exportfastproduct.com/885-large_default/lote-de-chamarras-mixtas-de-marca.jpg', location: 'Centro', category: 'Ropa' },
+  { id: '6', title: 'Lámpara de escritorio', type: 'Donación', imageUrl: 'https://resources.claroshop.com/medios-plazavip/t1/171434354861S8i6Z8imLACSX569jpg', location: 'Camino Real', category: 'Muebles' },
 ];
 
 // --- 2. Interface y Dimensiones ---
@@ -42,7 +51,11 @@ const cardWidth = (width - 24) / 2 - 8;
 
 // --- 3. Definición de Categorías ---
 // (Sin cambios)
-const CATEGORIES = [
+const CATEGORIES: {
+  id: string;
+  name: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+}[] = [
   { id: '1', name: 'Alimentos', icon: 'food-apple' },
   { id: '2', name: 'Ropa y Calzado', icon: 'tshirt-crew' },
   { id: '3', name: 'Muebles', icon: 'sofa' },

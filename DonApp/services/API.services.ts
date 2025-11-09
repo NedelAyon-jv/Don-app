@@ -8,28 +8,23 @@ class APIClient {
     this.client = axios.create({
       baseURL: "https://don-app.onrender.com/api",
       timeout: 10000,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
 
     this.setupInterceptors();
   }
 
   private setupInterceptors() {
-    // Interceptor de solicitud
     this.client.interceptors.request.use(
       async (config) => {
-        // Asegurar que config.headers existe
         config.headers = config.headers || {};
-        
-        const token = await AsyncStorage.getItem("accessToken");
-        if (token) {
-          config.headers["Authorization"] = `Bearer ${token}`;
-        }
 
-        // Asegurar Content-Type
-        if (!config.headers["Content-Type"]) {
+        const token = await AsyncStorage.getItem("accessToken");
+        if (token) config.headers["Authorization"] = `Bearer ${token}`;
+
+        // ✅ Solo poner JSON si NO es FormData
+        if (config.data instanceof FormData) {
+          delete config.headers["Content-Type"];
+        } else {
           config.headers["Content-Type"] = "application/json";
         }
 
@@ -44,7 +39,6 @@ class APIClient {
       }
     );
 
-    // Interceptor de respuesta
     this.client.interceptors.response.use(
       (response: AxiosResponse) => {
         console.log(`✅ Respuesta OK [${response.status}]`, response.config.url);
@@ -69,8 +63,8 @@ class APIClient {
     return response.data;
   }
 
-  async post<T>(url: string, data?: any, p0?: { headers: { "Content-Type": string; Authorization: string; }; }): Promise<T> {
-    const response = await this.client.post<T>(url, data);
+  async post<T>(url: string, data?: any, config?: any): Promise<T> {
+    const response = await this.client.post<T>(url, data, config);
     return response.data;
   }
 

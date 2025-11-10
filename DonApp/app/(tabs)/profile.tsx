@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import { getCurrentUser, logout } from '@/services/user/auth.services';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // <-- Asegúrate de que esta importación exista
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Interfaz para el usuario
 interface User {
   id: string;
   fullname: string;
@@ -27,7 +26,7 @@ interface User {
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
-  const styles = useMemo(() => createStyles(theme), [theme]); // 'styles' se crea aquí
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter(); 
 
   const [user, setUser] = useState<User | null>(null);
@@ -57,30 +56,20 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             await logout(); 
-            router.replace('/'); 
+            router.replace('../app/index.tsx'); 
           }
         }
       ]
     );
   };
 
-  // ==============================================
-  // ==== ¡AQUÍ ESTÁ LA CORRECCIÓN! ====
-  // Movemos los componentes auxiliares DENTRO de ProfileScreen
-  // para que puedan acceder a la variable 'styles'
-  // ==============================================
-
-  // Componente auxiliar para filas de información
-  // Ya no necesita 'theme' como prop, porque 'styles' ya tiene el tema.
   const InfoRow = ({ icon, text }: { icon: any, text: string }) => (
-    <View style={styles.infoRow}> {/* <-- Ahora 'styles' SÍ existe aquí */}
+    <View style={styles.infoRow}>
       <MaterialCommunityIcons name={icon} size={22} color={theme.text} style={styles.infoIcon} />
       <Text style={styles.infoText}>{text}</Text>
     </View>
   );
 
-  // Componente auxiliar para botones de opción
-  // Ya no necesita 'theme' como prop.
   const OptionButton = ({ icon, text, onPress }: { icon: any, text: string, onPress: () => void }) => (
     <TouchableOpacity style={styles.optionButton} onPress={onPress}>
       <MaterialCommunityIcons name={icon} size={22} color={theme.text} style={styles.infoIcon} />
@@ -88,9 +77,6 @@ export default function ProfileScreen() {
       <MaterialCommunityIcons name="chevron-right" size={22} color={theme.text} />
     </TouchableOpacity>
   );
-  // ==============================================
-  // ==== FIN DE LA CORRECCIÓN ====
-  // ==============================================
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -143,8 +129,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* --- Botón de Cerrar Sesión --- */}
-          {/* Este ya funcionaba porque estaba dentro del return */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <MaterialCommunityIcons name="logout" size={22} color={theme.error} />
             <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
@@ -155,7 +139,6 @@ export default function ProfileScreen() {
   );
 }
 
-// Los estilos se quedan aquí fuera, como estaban
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
@@ -211,7 +194,7 @@ const createStyles = (theme: typeof Colors.light) =>
     infoText: {
       fontSize: 16,
       color: theme.text,
-      flex: 1, // Para que el icono de chevron se vaya al final
+      flex: 1, 
     },
     optionButton: {
       flexDirection: 'row',

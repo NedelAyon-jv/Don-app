@@ -1,77 +1,49 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// publi.services.ts (LA VERSIÓN FINAL CON PRUEBA DE LOG)
 import { apiClient } from "../API.services";
 import { AxiosResponse } from "axios";
 
-export interface PublicationData {
-  title: string;
-  description: string;
-  type: string;
-  category: string;
-  condition: string;
-  quantity: number;
-  availability: string;
-  pickupRequirements: string;
-  location: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  };
-  tags: string[];
-}
-
-// ✅ Crear publicación con imágenes
-export const createPublication = async (
-  publicationData: PublicationData,
-  imagesUri: string[]
-) => {
+// ✅ Crear publicación con imágenes (Trueque / Donación / Venta)
+export const createPublication = async (publicationData: any, imagesArray: string[]) => {
+  
+  // --- PRUEBA DE FUEGO ---
+  console.log("--- DENTRO DE createPublication (publi.services.ts) ---");
+  console.log("Datos recibidos por el servicio:");
+  console.log(JSON.stringify(publicationData, null, 2));
+  // --- FIN DE PRUEBA ---
+  
   try {
     const formData = new FormData();
+
+    // --- Agregar JSON de la publicación ---
     formData.append("publicationData", JSON.stringify(publicationData));
 
-    imagesUri.forEach((uri, index) => {
+    // --- Agregar imágenes ---
+    imagesArray.forEach((uri, index) => {
       formData.append("images", {
         uri,
-        name: `img_${index}.jpg`,
         type: "image/jpeg",
+        name: `image_${index}.jpg`,
       } as any);
     });
 
-    return await apiClient.post("/publications/", formData);
-  } catch (error) {
-    console.log("❌ Error creando publicación:", error);
+    const response: AxiosResponse<any> = await apiClient.post("/publications", formData);
+    return response.data;
+  } catch (error: any) {
+    console.log("❌ Error en createPublication:", error);
     throw error;
   }
 };
 
 // ✅ Crear donación
 export const createDonation = async (donationData: any, imagesUri: string[]) => {
-  try {
-    const formData = new FormData();
-
-    formData.append(
-      "publicationData",
-      JSON.stringify({
-        ...donationData,
-        type: "donation_request",
-      })
-    );
-
-    imagesUri.forEach((uri, index) => {
-      formData.append("images", {
-        uri,
-        name: `donation_${index}.jpg`,
-        type: "image/jpeg",
-      } as any);
-    });
-
-    return await apiClient.post("/publications/", formData);
-  } catch (error) {
-    console.log("❌ Error creando donación:", error);
-    throw error;
-  }
+  return createPublication({ ...donationData, type: "donation_offer" }, imagesUri);
 };
 
-// ✅ Update publication
+//
+// --- EL RESTO DE FUNCIONES NO CAMBIAN ---
+//
+
+// ✅ Actualizar publicación
 export const updatePublication = async (
   publicationId: string,
   updatedData: any,
@@ -90,21 +62,17 @@ export const updatePublication = async (
     });
 
     return await apiClient.put(`/publications/update/${publicationId}`, formData);
-  } catch (error) {
+  } catch (error: any) {
     console.log("❌ Error actualizando publicación:", error);
     throw error;
   }
 };
 
-// ✅ Get publicaciones
-export const getPublications = async (filters?: {
-  type?: string;
-  category?: string;
-  limit?: number;
-}) => {
+// ✅ Obtener publicaciones
+export const getPublications = async (filters?: { type?: string; category?: string; limit?: number }) => {
   try {
     return await apiClient.get("/publications", filters ? { params: filters } : undefined);
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error obteniendo publicaciones:", error);
     throw error;
   }
@@ -125,9 +93,8 @@ export const getNearbyPublications = async ({
   try {
     const params: any = { latitude, longitude, radius };
     if (type) params.type = type;
-
     return await apiClient.get("/publications/nearby", { params });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error obteniendo publicaciones cercanas:", error);
     throw error;
   }
@@ -137,7 +104,7 @@ export const getNearbyPublications = async ({
 export const getMyPublications = async () => {
   try {
     return await apiClient.get("/publications/user/me");
-  } catch (error) {
+  } catch (error: any) {
     console.log("❌ Error obteniendo mis publicaciones:", error);
     throw error;
   }
@@ -147,7 +114,7 @@ export const getMyPublications = async () => {
 export const getUserPublications = async (userId: string) => {
   try {
     return await apiClient.get(`/publications/user/${userId}`);
-  } catch (error) {
+  } catch (error: any) {
     console.log("❌ Error obteniendo publicaciones del usuario:", error);
     throw error;
   }

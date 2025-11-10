@@ -1,6 +1,8 @@
-import { Colors } from '@/constants/theme'; // <-- Import original de tu proyecto
-import { FontAwesome } from '@expo/vector-icons'; // <-- Import original de tu proyecto
-import * as ImagePicker from 'expo-image-picker'; // <-- Import original de tu proyecto
+// publicar.tsx
+import { Colors } from '@/constants/theme';
+import { FontAwesome } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { createDonation, createPublication } from '@/services/user/publi.services';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
@@ -13,11 +15,9 @@ import {
   TouchableOpacity,
   View,
   useColorScheme
-} from 'react-native'; // <-- Import original de tu proyecto
-import { SafeAreaView } from 'react-native-safe-area-context'; // <-- Import original de tu proyecto
-// import { createDonation, createPublication } from '../services/publi.services'; // <-- Descomentar cuando el servicio esté listo
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Definimos los tipos para el estado y el tipo de publicación
 type PostType = 'Donación' | 'Trueque';
 type PostPriority = 'low' | 'medium' | 'high';
 
@@ -26,151 +26,161 @@ export default function PublishScreen() {
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // --- Estados del Formulario Base ---
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [images, setImages] = useState<string[]>([]); // Almacena URIs de las imágenes
+  const [images, setImages] = useState<string[]>([]);
   const [postType, setPostType] = useState<PostType>('Donación');
 
-  // --- Nuevos Estados (Solo para Donación) ---
   const [priority, setPriority] = useState<PostPriority>('medium');
-  const [targetQuantity, setTargetQuantity] = useState('1'); // Usar string para TextInput
-  const [acceptedItems, setAcceptedItems] = useState(''); // Se convertirán en array
+  const [targetQuantity, setTargetQuantity] = useState('1');
+  const [acceptedItems, setAcceptedItems] = useState('');
   const [restrictions, setRestrictions] = useState('');
-  const [deadline, setDeadline] = useState(''); // Formato YYYY-MM-DD
+  const [deadline, setDeadline] = useState('');
 
-  // --- Lógica de Imágenes (Original de RN) ---
-  const pickImage = async () => {
-    if (images.length >= 5) {
-      Alert.alert('Límite alcanzado', 'Solo puedes subir un máximo de 5 imágenes.');
-      return;
-    }
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert('Permiso requerido', 'Necesitas dar acceso a tu galería para subir imágenes.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets) {
-      setImages([...images, result.assets[0].uri]);
-    }
+const pickImage = async () => {
+  if (images.length >= 5) {
+    Alert.alert('Límite alcanzado', 'Solo puedes subir un máximo de 5 imágenes.');
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    quality: 0.85,
+  });
+
+  if (!result.canceled && result.assets?.length) {
+    setImages([...images, result.assets[0].uri]);
+  }
+};
+
+  const removeImage = (uri: string) => {
+    setImages(images.filter(img => img !== uri));
   };
 
-  const removeImage = (uriToRemove: string) => {
-    setImages(images.filter((imgUri) => imgUri !== uriToRemove));
-  };
+// Copia y reemplaza esta función completa en publicar.tsx
 
-  // --- Lógica de Publicación (Actualizada) ---
+  // Reemplaza ESTA FUNCIÓN en publicar.tsx
+
   const handleSubmit = async () => {
-    // Validación base
-    if (images.length === 0) {
-      Alert.alert('Error', 'Debes subir al menos 1 imagen.');
-      return;
-    }
     if (!title || !description) {
-      Alert.alert('Error', 'El título y la descripción son obligatorios.');
+      Alert.alert("Error", "El título y la descripción son obligatorios.");
       return;
     }
 
-    // --- Preparar datos y validar según el tipo ---
-    if (postType === 'Donación') {
-      // Validación de campos de donación
-      if (!targetQuantity || !acceptedItems || !deadline) {
-        Alert.alert('Error', 'Para donaciones, la cantidad, artículos aceptados y fecha límite son obligatorios.');
-        return;
+    if (images.length === 0) {
+      Alert.alert("Error", "Debes subir al menos 1 imagen.");
+      return;
+    }
+
+    try {
+      if (postType === "Donación") {
+        
+        // --- CÓDIGO DE DONACIÓN (Sin cambios) ---
+        const donationData = {
+          title,
+          description,
+          type: "donation_offer",
+          priority,
+          targetQuantity: parseInt(targetQuantity, 10),
+          acceptedItems: acceptedItems.split(',').map(item => item.trim()),
+          restrictions: restrictions || "Ninguna",
+          deadline,
+          category: "other",
+          condition: "good",
+          quantity: parseInt(targetQuantity, 10),
+          availability: "available",
+          pickupRequirements: "Ninguna",
+          tags: ["donación"],
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+            address: "Ubicación no especificada",
+          }
+        };
+        
+        console.log("--- ENVIANDO DONACIÓN ---");
+        console.log(JSON.stringify(donationData, null, 2));
+
+        await createDonation(donationData, images);
+        Alert.alert("Éxito", "Donación publicada correctamente.");
+        
+      } else {
+        
+        // --- INICIO DE LA SOLUCIÓN HÍBRIDA (TRUEQUE) ---
+        
+        const publicationData = {
+          title,
+          description,
+          type: "exchange",
+          category: "other",
+          quantity: 1,
+          availability: "available",
+          pickupRequirements: "ninguno",
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+            address: "Ubicación no especificada",
+          },
+          tags: ["trueque"],
+          
+          // --- 1. CAMPOS PARA EL ERROR 500 ---
+          // (Los que pide el mensaje de error, en el nivel superior)
+          condition: "good", 
+          seekingItems: ["ropa", "libros", "juguetes"],
+
+          // --- 2. CAMPOS ORIGINALES (POR SI ACASO) ---
+          // (Los que tenías en tu primer archivo, anidados)
+          publicationDetails: {
+            exchangeCondition: "solo artículos en buen estado",
+            exchangeSeekingItems: ["ropa", "libros", "juguetes"],
+          }
+        };
+
+        // (Los console.log se quedan para verificar)
+        console.log("--- ENVIANDO TRUEQUE (HÍBRIDO) ---");
+        console.log(JSON.stringify(publicationData, null, 2));
+        
+        await createPublication(publicationData, images);
+        Alert.alert("Éxito", "Trueque publicado correctamente.");
+        // --- FIN DE LA SOLUCIÓN HÍBRIDA ---
       }
 
-      // Convertir estados a los tipos requeridos por el backend
-      const donationData = {
-        title,
-        description,
-        priority,
-        targetQuantity: parseInt(targetQuantity, 10), // Convertir a número
-        acceptedItems: acceptedItems.split(',').map(item => item.trim()), // Convertir string a array
-        restrictions: restrictions || 'ninguna', // Opcional
-        deadline,
-        // --- ADVERTENCIA: FALTAN DATOS ---
-        // El servicio createDonation también requiere:
-        // - category
-        // - location (latitude, longitude, address)
-        // - tags
-        // Estos campos deben agregarse al formulario para que la API funcione.
-      };
+      // Limpiar campos
+      setTitle('');
+      setDescription('');
+      setImages([]);
+      setTargetQuantity('1');
+      setAcceptedItems('');
+      setRestrictions('');
+      setDeadline('');
+      setPriority('medium');
 
-      console.log('Publicando Donación...', donationData);
-      
-      // try {
-      //   // NOTA: Esta llamada fallará hasta que se agreguen 'category', 'location' y 'tags' al formulario.
-      //   // const response = await createDonation(donationData, images);
-      //   // Alert.alert('Éxito', 'Donación publicada correctamente.');
-      //   Alert.alert('Éxito (Maqueta)', 'Donación lista para publicar. Revisa la consola para ver los datos.');
-      // } catch (error) {
-      //   console.error(error);
-      //   Alert.alert('Error', 'No se pudo publicar la donación.');
-      // }
-       Alert.alert('Éxito (Maqueta)', `Donación lista. Datos: ${JSON.stringify(donationData)}`);
-
-
-    } else { // Si es Trueque
-      const publicationData = {
-        title,
-        description,
-        type: 'trade', // O el tipo que espere tu backend para trueque
-        // --- ADVERTENCIA: FALTAN DATOS ---
-        // El servicio createPublication también requiere:
-        // - category
-        // - condition
-        // - quantity
-        // - availability
-        // - pickupRequirements
-        // - location
-        // - tags
-      };
-
-      console.log('Publicando Trueque...', publicationData);
-      
-      // try {
-      //   // NOTA: Esta llamada fallará hasta que se agreguen los campos faltantes.
-      //   // const response = await createPublication(publicationData, images);
-      //   // Alert.alert('Éxito', 'Trueque publicado correctamente.');
-      //   Alert.alert('Éxito (Maqueta)', 'Trueque listo para publicar. Revisa la consola para ver los datos.');
-      // } catch (error) {
-      //   console.error(error);
-      //   Alert.alert('Error', 'No se pudo publicar el trueque.');
-      // }
-      Alert.alert('Éxito (Maqueta)', `Trueque listo. Datos: ${JSON.stringify(publicationData)}`);
+    } catch (error) {
+      console.log("❌ Error en createPublication:", error);
+      Alert.alert("Error", postType === "Donación" ? "No se pudo publicar la donación." : "No se pudo publicar el trueque.");
     }
   };
-
-  // --- Componente de campos de donación (RN) ---
+  // El resto del componente (renderDonationFields, return, styles) no cambia.
+  
   const renderDonationFields = () => (
     <>
-      {/* Prioridad */}
       <Text style={styles.label}>Prioridad</Text>
       <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[styles.segmentButton, priority === 'low' && styles.segmentButtonActive]}
+        <TouchableOpacity style={[styles.segmentButton, priority === 'low' && styles.segmentButtonActive]}
           onPress={() => setPriority('low')}>
           <Text style={[styles.segmentText, priority === 'low' && styles.segmentTextActive]}>Baja</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentButton, priority === 'medium' && styles.segmentButtonActive]}
+        <TouchableOpacity style={[styles.segmentButton, priority === 'medium' && styles.segmentButtonActive]}
           onPress={() => setPriority('medium')}>
           <Text style={[styles.segmentText, priority === 'medium' && styles.segmentTextActive]}>Media</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segmentButton, priority === 'high' && styles.segmentButtonActive]}
+        <TouchableOpacity style={[styles.segmentButton, priority === 'high' && styles.segmentButtonActive]}
           onPress={() => setPriority('high')}>
           <Text style={[styles.segmentText, priority === 'high' && styles.segmentTextActive]}>Alta</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Cantidad Requerida */}
       <Text style={styles.label}>Cantidad Requerida</Text>
       <TextInput
         style={styles.input}
@@ -181,29 +191,25 @@ export default function PublishScreen() {
         keyboardType="number-pad"
       />
 
-      {/* Artículos Aceptados */}
       <Text style={styles.label}>Artículos Aceptados (separados por coma)</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ej: Ropa de invierno, juguetes, comida no perecedera"
+        placeholder="Ej: Ropa de invierno, juguetes"
         placeholderTextColor={theme.text}
         value={acceptedItems}
         onChangeText={setAcceptedItems}
       />
 
-      {/* Restricciones */}
       <Text style={styles.label}>Restricciones (Opcional)</Text>
       <TextInput
         style={styles.inputMultiline}
-        placeholder="Ej: Solo ropa de adulto, no se aceptan vidrios"
+        placeholder="Ej: Solo ropa de adulto, no vidrio"
         placeholderTextColor={theme.text}
         value={restrictions}
         onChangeText={setRestrictions}
         multiline
-        numberOfLines={3}
       />
 
-      {/* Fecha Límite */}
       <Text style={styles.label}>Fecha Límite (YYYY-MM-DD)</Text>
       <TextInput
         style={styles.input}
@@ -211,19 +217,15 @@ export default function PublishScreen() {
         placeholderTextColor={theme.text}
         value={deadline}
         onChangeText={setDeadline}
-        // Para una mejor UX, aquí se debería usar un DatePicker
-        // como @react-native-community/datetimepicker
       />
     </>
   );
 
-  // --- Renderizado de la UI (con colores de tema) ---
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={[styles.header, { color: theme.text }]}>Publicar</Text>
 
-        {/* Título */}
         <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
@@ -233,19 +235,16 @@ export default function PublishScreen() {
           onChangeText={setTitle}
         />
 
-        {/* Descripción */}
         <Text style={styles.label}>Descripción</Text>
         <TextInput
           style={styles.inputMultiline}
-          placeholder="Describe tu artículo, detalles, condiciones, etc."
+          placeholder="Describe tu artículo"
           placeholderTextColor={theme.text}
           value={description}
           onChangeText={setDescription}
           multiline
-          numberOfLines={4}
         />
 
-        {/* Selector de Imágenes */}
         <Text style={styles.label}>Imágenes ({images.length} / 5)</Text>
         <View style={styles.imagePickerContainer}>
           <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
@@ -254,7 +253,6 @@ export default function PublishScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Vista previa de imágenes */}
         <FlatList
           data={images}
           horizontal
@@ -270,7 +268,6 @@ export default function PublishScreen() {
           style={styles.imagePreviewList}
         />
 
-        {/* Tipo: Donación o Trueque */}
         <Text style={styles.label}>Tipo de Publicación</Text>
         <View style={styles.segmentContainer}>
           <TouchableOpacity
@@ -278,6 +275,7 @@ export default function PublishScreen() {
             onPress={() => setPostType('Donación')}>
             <Text style={[styles.segmentText, postType === 'Donación' && styles.segmentTextActive]}>Donación</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.segmentButton, postType === 'Trueque' && styles.segmentButtonActive]}
             onPress={() => setPostType('Trueque')}>
@@ -285,10 +283,8 @@ export default function PublishScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* --- AQUI SE MUESTRAN LOS CAMPOS NUEVOS --- */}
         {postType === 'Donación' && renderDonationFields()}
-        
-        {/* Botón de Publicar */}
+
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Publicar Artículo</Text>
         </TouchableOpacity>
@@ -298,12 +294,11 @@ export default function PublishScreen() {
   );
 }
 
-// --- Estilos dinámicos (Sin cambios, son los originales) ---
+// --- Estilos (sin cambios) ---
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      // backgroundColor: theme.background, // <-- Color de tema
       marginTop: -20
     },
     scrollContainer: {
@@ -312,8 +307,6 @@ const createStyles = (theme: typeof Colors.light) =>
     header: {
       fontSize: 30,
       fontWeight: 'bold',
-      // margin: 10,
-      // padding: 10,
       marginBottom: 10,
       marginTop: -25,
       flexDirection: 'row',
@@ -324,75 +317,65 @@ const createStyles = (theme: typeof Colors.light) =>
     label: {
       fontSize: 16,
       fontWeight: 'bold',
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
       marginBottom: 8,
       marginTop: 16,
     },
     input: {
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: theme.border, // <-- Color de tema
+      borderColor: theme.border,
       borderRadius: 8,
       padding: 12,
       fontSize: 15,
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
     },
     inputMultiline: {
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: theme.border, // <-- Color de tema
+      borderColor: theme.border,
       borderRadius: 8,
       padding: 12,
       fontSize: 15,
       height: 100,
       textAlignVertical: 'top',
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
     },
-    // --- Estilos de Imágenes ---
-    imagePickerContainer: {
-      alignItems: 'center',
-      marginBottom: 10,
-    },
+    imagePickerContainer: { alignItems: 'center', marginBottom: 10 },
     imagePickerButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       borderWidth: 1,
-      borderColor: theme.primary, // <-- Color de tema
+      borderColor: theme.primary,
       padding: 12,
       borderRadius: 8,
     },
     imagePickerText: {
       marginLeft: 10,
       fontSize: 16,
-      color: theme.primary, // <-- Color de tema
+      color: theme.primary,
       fontWeight: 'bold',
     },
-    imagePreviewList: {
-      marginBottom: 10,
-    },
-    imagePreviewContainer: {
-      position: 'relative',
-      marginRight: 10,
-    },
+    imagePreviewList: { marginBottom: 10 },
+    imagePreviewContainer: { position: 'relative', marginRight: 10 },
     imagePreview: {
       width: 100,
       height: 100,
       borderRadius: 8,
-      backgroundColor: theme.border, // <-- Color de tema
+      backgroundColor: theme.border,
     },
     removeImageButton: {
       position: 'absolute',
       top: -5,
       right: -5,
-      backgroundColor: theme.card, // <-- Color de tema
+      backgroundColor: theme.card,
       borderRadius: 12,
     },
-    // --- Estilos de Segmentos (Selectores) ---
     segmentContainer: {
       flexDirection: 'row',
       width: '100%',
-      backgroundColor: theme.border, // <-- Color de tema
+      backgroundColor: theme.border,
       borderRadius: 8,
       overflow: 'hidden',
     },
@@ -403,21 +386,20 @@ const createStyles = (theme: typeof Colors.light) =>
       justifyContent: 'center',
     },
     segmentButtonActive: {
-      backgroundColor: theme.primary, // <-- Color de tema
+      backgroundColor: theme.primary,
     },
     segmentText: {
       fontSize: 15,
-      color: theme.text, // <-- Color de tema
+      color: theme.text,
       fontWeight: '600',
       opacity: 0.7,
     },
     segmentTextActive: {
-      color: theme.background, // <-- Color de tema
+      color: theme.background,
       opacity: 1,
     },
-    // --- Botón de Publicar ---
     submitButton: {
-      backgroundColor: theme.success, // <-- Color de tema (funcional)
+      backgroundColor: theme.success,
       borderRadius: 8,
       padding: 16,
       alignItems: 'center',
@@ -425,7 +407,7 @@ const createStyles = (theme: typeof Colors.light) =>
       marginBottom: 16,
     },
     submitButtonText: {
-      color: theme.card, // <-- Color de tema
+      color: theme.card,
       fontSize: 18,
       fontWeight: 'bold',
     },

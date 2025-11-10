@@ -1,7 +1,4 @@
 import { Colors } from '@/constants/theme';
-// ==============================================
-// ==== 1. IMPORTAR EL SERVICIO DE REGISTRO ====
-// ==============================================
 import { registerUser } from '@/services/user/auth.services';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -21,40 +18,55 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const hasLength = (pwd: string) => pwd.length >= 8;
+const hasUppercase = (pwd: string) => /[A-Z]/.test(pwd);
+const hasNumber = (pwd: string) => /\d/.test(pwd);
+const hasSpecial = (pwd: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+
+
 export default function SignUpScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
 
-  // --- Estados (Están perfectos como los tenías) ---
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState(''); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
-  // ---------------------------------
 
-  // ==============================================
-  // ==== 2. LÓGICA DE REGISTRO ACTUALIZADA ====
-  // ==============================================
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  const passwordValidations = useMemo(() => ({
+    length: hasLength(password),
+    uppercase: hasUppercase(password),
+    number: hasNumber(password),
+    special: hasSpecial(password),
+  }), [password]);
+
+
   const handleSignUp = async () => {
-    // Validación de campos vacíos (¡Esto está perfecto!)
     if (!username || !fullName || !email || !password || !confirmPassword || !phone) {
       Alert.alert('Campos incompletos', 'Por favor, completa todos los campos.');
       return;
     }
-    // Validación de contraseñas (¡Perfecto!)
     if (password !== confirmPassword) {
       Alert.alert('Las contraseñas no coinciden', 'Por favor, verifica tu contraseña.');
       return;
     }
 
-    // --- Inicio de la lógica de API ---
+    const isPasswordValid = Object.values(passwordValidations).every(v => v === true);
+    if (!isPasswordValid) {
+      Alert.alert(
+        'Contraseña insegura',
+        'Tu contraseña no cumple con todos los requisitos. Por favor, revísalos.'
+      );
+      return;
+    }
+
     try {
-      // 1. Preparamos los datos para la API
-      // Nota: tu estado 'fullName' se mapea a 'fullname' en la API
       const data = {
         username: username,
         fullname: fullName, 
@@ -65,20 +77,15 @@ export default function SignUpScreen() {
 
       console.log('Enviando datos de registro a la API...', data);
 
-      // 2. Llamamos al servicio
-      // Recuerda: 'registerUser' ya guarda la sesión (token y user)
-      // en AsyncStorage si el registro es exitoso.
       await registerUser(data);
 
-      // 3. Si todo salió bien, mostramos éxito y navegamos
       Alert.alert(
         '¡Bienvenido!',
         'Tu cuenta ha sido creada exitosamente.'
       );
-      router.replace('/(tabs)'); // Redirige al home
+      router.replace('/(tabs)'); 
 
     } catch (error: any) {
-      // 4. Si la API devuelve un error (ej: email ya existe, error 500)
       console.error('❌ Error en handleSignUp (Registro):', error);
       Alert.alert(
         'Error al registrar',
@@ -86,7 +93,20 @@ export default function SignUpScreen() {
       );
     }
   };
-  // --- Fin de la lógica de API ---
+
+  const PasswordRequirement = ({ isValid, text }: { isValid: boolean, text: string }) => {
+    const itemColor = isValid ? theme.primary : theme.text; 
+    const itemIcon = isValid ? "check-circle" : "checkbox-blank-circle-outline";
+    const itemOpacity = isValid ? 1.0 : 0.6;
+
+    return (
+      <View style={[styles.validationRow, { opacity: itemOpacity }]}>
+        <MaterialCommunityIcons name={itemIcon} size={18} color={itemColor} />
+        <Text style={[styles.validationText, { color: itemColor }]}>{text}</Text>
+      </View>
+    );
+  };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -94,7 +114,6 @@ export default function SignUpScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
 
-        {/* El resto de tu JSX está perfecto, no necesita cambios */}
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.logoContainer}>
             <Image
@@ -107,7 +126,6 @@ export default function SignUpScreen() {
           <Text style={styles.title}>Registrarse</Text>
           <Text style={styles.subtitle}>Forma parte de la comunidad DonApp.</Text>
 
-          {/* Input Usuario */}
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="at" size={22} color={theme.text} style={styles.inputIcon} />
             <TextInput
@@ -119,21 +137,17 @@ export default function SignUpScreen() {
               onChangeText={setUsername}
             />
           </View>
-
-          {/* Input Nombre(s) */}
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="account-outline" size={22} color={theme.text} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Nombre(s)"
+              placeholder="Nombre completo"
               placeholderTextColor={theme.text}
               autoCapitalize="words"
               value={fullName}
               onChangeText={setFullName}
             />
           </View>
-
-          {/* Input Email */}
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="email-outline" size={22} color={theme.text} style={styles.inputIcon} />
             <TextInput
@@ -147,6 +161,7 @@ export default function SignUpScreen() {
             />
           </View>
 
+
           {/* Input Contraseña */}
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="lock-outline" size={22} color={theme.text} style={styles.inputIcon} />
@@ -157,8 +172,21 @@ export default function SignUpScreen() {
               secureTextEntry
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setPasswordTouched(true)}
             />
           </View>
+
+          {/* --- NUEVO: Checklist de validación --- */}
+          {passwordTouched && ( 
+            <View style={styles.validationContainer}>
+              <PasswordRequirement isValid={passwordValidations.length} text="Mínimo 8 caracteres" />
+              <PasswordRequirement isValid={passwordValidations.uppercase} text="Mínimo 1 mayúscula (A-Z)" />
+              <PasswordRequirement isValid={passwordValidations.number} text="Mínimo 1 número (0-9)" />
+              <PasswordRequirement isValid={passwordValidations.special} text="Mínimo 1 carácter especial (!@#$)" />
+            </View>
+          )}
+          {/* --- Fin del checklist --- */}
+
 
           {/* Input Confirmar Contraseña */}
           <View style={styles.inputContainer}>
@@ -207,7 +235,6 @@ export default function SignUpScreen() {
   );
 }
 
-// (Tus estilos están perfectos, no se tocan)
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
@@ -270,6 +297,23 @@ const createStyles = (theme: typeof Colors.light) =>
       fontSize: 16,
       color: theme.text,
     },
+    
+    validationContainer: {
+      width: '100%',
+      paddingHorizontal: 10,
+      marginBottom: 10,
+      marginTop: -5,
+    },
+    validationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    validationText: {
+      marginLeft: 10,
+      fontSize: 14,
+    },
+
     button: {
       backgroundColor: theme.primary,
       paddingVertical: 15,

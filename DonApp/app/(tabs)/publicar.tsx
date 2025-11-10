@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/theme'; // <-- 1. Importar Colores
+import { createPublication, createDonation } from '@/services/user/publi.services';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useMemo, useState } from 'react'; // <-- 2. Importar useMemo
@@ -32,6 +33,7 @@ export default function PublishScreen() {
   const [images, setImages] = useState<string[]>([]);
   const [postType, setPostType] = useState<PostType>('Donación');
   const [status, setStatus] = useState<PostStatus>('Disponible');
+  const [quantity, setQuantity] = useState(1);
 
   // --- Lógica de Imágenes (sin cambios) ---
   const pickImage = async () => {
@@ -60,18 +62,75 @@ export default function PublishScreen() {
   };
 
   // --- Lógica de Publicación (sin cambios) ---
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (images.length === 0) {
-      Alert.alert('Error', 'Debes subir al menos 1 imagen.');
+      Alert.alert("Error", "Debes subir al menos 1 imagen.");
       return;
     }
-    if (!title || !description) {
-      Alert.alert('Error', 'El título y la descripción son obligatorios.');
+
+    if (title.length < 5) {
+      Alert.alert("Error", "El título debe tener al menos 5 caracteres.");
       return;
     }
-    console.log('Publicando...', { title, description, postType, status, images });
-    Alert.alert('Éxito (Maqueta)', 'Artículo listo para publicar.');
+
+    if (description.length < 10) {
+      Alert.alert("Error", "La descripción debe tener al menos 10 caracteres.");
+      return;
+    }
+
+    try {
+      const publicationData = {
+        title,
+        description,
+        category: "clothing", // asegúrate que existe en el backend
+        condition: "good",
+        quantity: 1,
+        availability: "available",
+        pickupRequirements: "ninguno",
+        location: {
+          latitude: 19.4326,
+          longitude: -99.1332,
+          address: "Ciudad de México"
+        },
+        tags: ["ropa", "donación"],
+        type: postType === "Donación" ? "donation_offer" : "barter_offer"
+      };
+
+
+      let result;
+
+      if (postType === "Donación") {
+        result = await createDonation(publicationData, images);
+      } else {
+        result = await createPublication(publicationData, images);
+      }
+
+      Alert.alert("✅ Listo", "Tu publicación se creó correctamente.");
+      console.log("📌 Resultado:", result);
+
+      setTitle("");
+      setDescription("");
+      setImages([]);
+      setQuantity(1);
+
+    } catch (error: any) {
+      console.log("❌ Error publicando:", error);
+
+      if (error.response?.data?.error?.details) {
+        console.log("⚠️ DETALLES DE VALIDACIÓN:");
+        error.response.data.error.details.forEach((d: any) => {
+          console.log(`• Campo: ${d.field} → ${d.message}`);
+        });
+      }
+
+      Alert.alert("Error", "No se pudo publicar. Revisa los campos.");
+    }
+
   };
+
+
+
+
 
   // --- Renderizado de la UI (con colores de tema) ---
   return (

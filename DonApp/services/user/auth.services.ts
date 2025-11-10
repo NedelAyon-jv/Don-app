@@ -167,6 +167,7 @@ export const registerUser = async (data: RegisterData) => {
     return response.data; 
   } catch (error) {
     console.error("❌ Error al registrar usuario:", error);
+    console.log((error as Error).message);
     throw error;
   }
 };

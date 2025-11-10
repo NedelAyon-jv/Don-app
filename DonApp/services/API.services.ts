@@ -68,7 +68,7 @@ class APIClient {
     return response.data;
   }
 
-  async put<T>(url: string, data?: any): Promise<T> {
+  async put<T>(url: string, data?: any, p0?: { headers: { "Content-Type": string; }; }): Promise<T> {
     const response = await this.client.put<T>(url, data);
     return response.data;
   }

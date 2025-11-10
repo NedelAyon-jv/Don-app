@@ -1,8 +1,7 @@
-import { Colors } from '@/constants/theme'; // <-- 1. Importar Colores
-import { createPublication, createDonation } from '@/services/user/publi.services';
-import { FontAwesome } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import React, { useMemo, useState } from 'react'; // <-- 2. Importar useMemo
+import { Colors } from '@/constants/theme'; // <-- Import original de tu proyecto
+import { FontAwesome } from '@expo/vector-icons'; // <-- Import original de tu proyecto
+import * as ImagePicker from 'expo-image-picker'; // <-- Import original de tu proyecto
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -13,29 +12,34 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  useColorScheme, // <-- 3. Importar useColorScheme
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  useColorScheme
+} from 'react-native'; // <-- Import original de tu proyecto
+import { SafeAreaView } from 'react-native-safe-area-context'; // <-- Import original de tu proyecto
+// import { createDonation, createPublication } from '../services/publi.services'; // <-- Descomentar cuando el servicio esté listo
 
 // Definimos los tipos para el estado y el tipo de publicación
 type PostType = 'Donación' | 'Trueque';
-type PostStatus = 'Disponible' | 'No Disponible';
+type PostPriority = 'low' | 'medium' | 'high';
 
 export default function PublishScreen() {
-  // --- 4. Configuración del Tema ---
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
-  // 5. Generar estilos dinámicamente
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  // --- Estados del Formulario Base ---
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]); // Almacena URIs de las imágenes
   const [postType, setPostType] = useState<PostType>('Donación');
-  const [status, setStatus] = useState<PostStatus>('Disponible');
-  const [quantity, setQuantity] = useState(1);
 
-  // --- Lógica de Imágenes (sin cambios) ---
+  // --- Nuevos Estados (Solo para Donación) ---
+  const [priority, setPriority] = useState<PostPriority>('medium');
+  const [targetQuantity, setTargetQuantity] = useState('1'); // Usar string para TextInput
+  const [acceptedItems, setAcceptedItems] = useState(''); // Se convertirán en array
+  const [restrictions, setRestrictions] = useState('');
+  const [deadline, setDeadline] = useState(''); // Formato YYYY-MM-DD
+
+  // --- Lógica de Imágenes (Original de RN) ---
   const pickImage = async () => {
     if (images.length >= 5) {
       Alert.alert('Límite alcanzado', 'Solo puedes subir un máximo de 5 imágenes.');
@@ -61,76 +65,157 @@ export default function PublishScreen() {
     setImages(images.filter((imgUri) => imgUri !== uriToRemove));
   };
 
-  // --- Lógica de Publicación (sin cambios) ---
+  // --- Lógica de Publicación (Actualizada) ---
   const handleSubmit = async () => {
+    // Validación base
     if (images.length === 0) {
-      Alert.alert("Error", "Debes subir al menos 1 imagen.");
+      Alert.alert('Error', 'Debes subir al menos 1 imagen.');
+      return;
+    }
+    if (!title || !description) {
+      Alert.alert('Error', 'El título y la descripción son obligatorios.');
       return;
     }
 
-    if (title.length < 5) {
-      Alert.alert("Error", "El título debe tener al menos 5 caracteres.");
-      return;
-    }
+    // --- Preparar datos y validar según el tipo ---
+    if (postType === 'Donación') {
+      // Validación de campos de donación
+      if (!targetQuantity || !acceptedItems || !deadline) {
+        Alert.alert('Error', 'Para donaciones, la cantidad, artículos aceptados y fecha límite son obligatorios.');
+        return;
+      }
 
-    if (description.length < 10) {
-      Alert.alert("Error", "La descripción debe tener al menos 10 caracteres.");
-      return;
-    }
+      // Convertir estados a los tipos requeridos por el backend
+      const donationData = {
+        title,
+        description,
+        priority,
+        targetQuantity: parseInt(targetQuantity, 10), // Convertir a número
+        acceptedItems: acceptedItems.split(',').map(item => item.trim()), // Convertir string a array
+        restrictions: restrictions || 'ninguna', // Opcional
+        deadline,
+        // --- ADVERTENCIA: FALTAN DATOS ---
+        // El servicio createDonation también requiere:
+        // - category
+        // - location (latitude, longitude, address)
+        // - tags
+        // Estos campos deben agregarse al formulario para que la API funcione.
+      };
 
-    try {
+      console.log('Publicando Donación...', donationData);
+      
+      // try {
+      //   // NOTA: Esta llamada fallará hasta que se agreguen 'category', 'location' y 'tags' al formulario.
+      //   // const response = await createDonation(donationData, images);
+      //   // Alert.alert('Éxito', 'Donación publicada correctamente.');
+      //   Alert.alert('Éxito (Maqueta)', 'Donación lista para publicar. Revisa la consola para ver los datos.');
+      // } catch (error) {
+      //   console.error(error);
+      //   Alert.alert('Error', 'No se pudo publicar la donación.');
+      // }
+       Alert.alert('Éxito (Maqueta)', `Donación lista. Datos: ${JSON.stringify(donationData)}`);
+
+
+    } else { // Si es Trueque
       const publicationData = {
         title,
         description,
-        category: "clothing", // asegúrate que existe en el backend
-        condition: "good",
-        quantity: 1,
-        availability: "available",
-        pickupRequirements: "ninguno",
-        location: {
-          latitude: 19.4326,
-          longitude: -99.1332,
-          address: "Ciudad de México"
-        },
-        tags: ["ropa", "donación"],
-        type: postType === "Donación" ? "donation_offer" : "barter_offer"
+        type: 'trade', // O el tipo que espere tu backend para trueque
+        // --- ADVERTENCIA: FALTAN DATOS ---
+        // El servicio createPublication también requiere:
+        // - category
+        // - condition
+        // - quantity
+        // - availability
+        // - pickupRequirements
+        // - location
+        // - tags
       };
 
-
-      let result;
-
-      if (postType === "Donación") {
-        result = await createDonation(publicationData, images);
-      } else {
-        result = await createPublication(publicationData, images);
-      }
-
-      Alert.alert("✅ Listo", "Tu publicación se creó correctamente.");
-      console.log("📌 Resultado:", result);
-
-      setTitle("");
-      setDescription("");
-      setImages([]);
-      setQuantity(1);
-
-    } catch (error: any) {
-      console.log("❌ Error publicando:", error);
-
-      if (error.response?.data?.error?.details) {
-        console.log("⚠️ DETALLES DE VALIDACIÓN:");
-        error.response.data.error.details.forEach((d: any) => {
-          console.log(`• Campo: ${d.field} → ${d.message}`);
-        });
-      }
-
-      Alert.alert("Error", "No se pudo publicar. Revisa los campos.");
+      console.log('Publicando Trueque...', publicationData);
+      
+      // try {
+      //   // NOTA: Esta llamada fallará hasta que se agreguen los campos faltantes.
+      //   // const response = await createPublication(publicationData, images);
+      //   // Alert.alert('Éxito', 'Trueque publicado correctamente.');
+      //   Alert.alert('Éxito (Maqueta)', 'Trueque listo para publicar. Revisa la consola para ver los datos.');
+      // } catch (error) {
+      //   console.error(error);
+      //   Alert.alert('Error', 'No se pudo publicar el trueque.');
+      // }
+      Alert.alert('Éxito (Maqueta)', `Trueque listo. Datos: ${JSON.stringify(publicationData)}`);
     }
-
   };
 
+  // --- Componente de campos de donación (RN) ---
+  const renderDonationFields = () => (
+    <>
+      {/* Prioridad */}
+      <Text style={styles.label}>Prioridad</Text>
+      <View style={styles.segmentContainer}>
+        <TouchableOpacity
+          style={[styles.segmentButton, priority === 'low' && styles.segmentButtonActive]}
+          onPress={() => setPriority('low')}>
+          <Text style={[styles.segmentText, priority === 'low' && styles.segmentTextActive]}>Baja</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentButton, priority === 'medium' && styles.segmentButtonActive]}
+          onPress={() => setPriority('medium')}>
+          <Text style={[styles.segmentText, priority === 'medium' && styles.segmentTextActive]}>Media</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentButton, priority === 'high' && styles.segmentButtonActive]}
+          onPress={() => setPriority('high')}>
+          <Text style={[styles.segmentText, priority === 'high' && styles.segmentTextActive]}>Alta</Text>
+        </TouchableOpacity>
+      </View>
 
+      {/* Cantidad Requerida */}
+      <Text style={styles.label}>Cantidad Requerida</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Ej: 5"
+        placeholderTextColor={theme.text}
+        value={targetQuantity}
+        onChangeText={setTargetQuantity}
+        keyboardType="number-pad"
+      />
 
+      {/* Artículos Aceptados */}
+      <Text style={styles.label}>Artículos Aceptados (separados por coma)</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Ej: Ropa de invierno, juguetes, comida no perecedera"
+        placeholderTextColor={theme.text}
+        value={acceptedItems}
+        onChangeText={setAcceptedItems}
+      />
 
+      {/* Restricciones */}
+      <Text style={styles.label}>Restricciones (Opcional)</Text>
+      <TextInput
+        style={styles.inputMultiline}
+        placeholder="Ej: Solo ropa de adulto, no se aceptan vidrios"
+        placeholderTextColor={theme.text}
+        value={restrictions}
+        onChangeText={setRestrictions}
+        multiline
+        numberOfLines={3}
+      />
+
+      {/* Fecha Límite */}
+      <Text style={styles.label}>Fecha Límite (YYYY-MM-DD)</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Ej: 2025-12-31"
+        placeholderTextColor={theme.text}
+        value={deadline}
+        onChangeText={setDeadline}
+        // Para una mejor UX, aquí se debería usar un DatePicker
+        // como @react-native-community/datetimepicker
+      />
+    </>
+  );
 
   // --- Renderizado de la UI (con colores de tema) ---
   return (
@@ -143,7 +228,7 @@ export default function PublishScreen() {
         <TextInput
           style={styles.input}
           placeholder="Ej: Silla de oficina en buen estado"
-          placeholderTextColor={theme.text} // <-- Color de tema
+          placeholderTextColor={theme.text}
           value={title}
           onChangeText={setTitle}
         />
@@ -153,7 +238,7 @@ export default function PublishScreen() {
         <TextInput
           style={styles.inputMultiline}
           placeholder="Describe tu artículo, detalles, condiciones, etc."
-          placeholderTextColor={theme.text} // <-- Color de tema
+          placeholderTextColor={theme.text}
           value={description}
           onChangeText={setDescription}
           multiline
@@ -164,7 +249,7 @@ export default function PublishScreen() {
         <Text style={styles.label}>Imágenes ({images.length} / 5)</Text>
         <View style={styles.imagePickerContainer}>
           <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-            <FontAwesome name="camera" size={24} color={theme.primary} /> {/* <-- Color de tema */}
+            <FontAwesome name="camera" size={24} color={theme.primary} />
             <Text style={styles.imagePickerText}>Añadir Foto</Text>
           </TouchableOpacity>
         </View>
@@ -178,8 +263,7 @@ export default function PublishScreen() {
             <View style={styles.imagePreviewContainer}>
               <Image source={{ uri: item }} style={styles.imagePreview} />
               <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(item)}>
-                {/* Usamos el color de error del tema */}
-                <FontAwesome name="times-circle" size={24} color={theme.error} /> {/* <-- Color de tema */}
+                <FontAwesome name="times-circle" size={24} color={theme.error} />
               </TouchableOpacity>
             </View>
           )}
@@ -201,21 +285,9 @@ export default function PublishScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Estado: Disponible o No Disponible */}
-        {/* <Text style={styles.label}>Estado</Text>
-        <View style={styles.segmentContainer}>
-          <TouchableOpacity
-            style={[styles.segmentButton, status === 'Disponible' && styles.segmentButtonActive]}
-            onPress={() => setStatus('Disponible')}>
-            <Text style={[styles.segmentText, status === 'Disponible' && styles.segmentTextActive]}>Disponible</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentButton, status === 'No Disponible' && styles.segmentButtonActive]}
-            onPress={() => setStatus('No Disponible')}>
-            <Text style={[styles.segmentText, status === 'No Disponible' && styles.segmentTextActive]}>No Disponible</Text>
-          </TouchableOpacity>
-        </View> */}
-
+        {/* --- AQUI SE MUESTRAN LOS CAMPOS NUEVOS --- */}
+        {postType === 'Donación' && renderDonationFields()}
+        
         {/* Botón de Publicar */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Publicar Artículo</Text>
@@ -226,8 +298,7 @@ export default function PublishScreen() {
   );
 }
 
-// --- 6. Estilos dinámicos ---
-// (Creamos una función que recibe el tema)
+// --- Estilos dinámicos (Sin cambios, son los originales) ---
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     container: {

@@ -15,12 +15,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// --- 1. INTERFAZ ACTUALIZADA ---
+// Agregamos el campo 'rating', que es opcional por si el usuario es nuevo.
 interface User {
   id: string;
   fullname: string;
   username: string;
   email: string;
   phone?: string;
+  rating?: {
+    average: number;
+    count: number;
+  };
 }
 
 export default function ProfileScreen() {
@@ -33,6 +39,8 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const loadUserData = async () => {
+      // Asumimos que getCurrentUser() ya trae el objeto de usuario COMPLETO
+      // (incluyendo el 'rating' que guardó el servicio de 'login')
       const userData = await getCurrentUser(); 
       if (userData) {
         setUser(userData);
@@ -56,13 +64,14 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             await logout(); 
-            router.replace('../app/index.tsx'); 
+            router.replace('../app/index.tsx'); // Ajusta esta ruta si es necesario
           }
         }
       ]
     );
   };
 
+  // ... (InfoRow y OptionButton sin cambios) ...
   const InfoRow = ({ icon, text }: { icon: any, text: string }) => (
     <View style={styles.infoRow}>
       <MaterialCommunityIcons name={icon} size={22} color={theme.text} style={styles.infoIcon} />
@@ -91,13 +100,30 @@ export default function ProfileScreen() {
             />
             <Text style={styles.name}>{user?.fullname || 'Nombre de Usuario'}</Text>
             <Text style={styles.username}>{user?.username ? `@${user.username}` : '@usuario'}</Text>
+          
+            {/* --- 2. SECCIÓN DE RATING AÑADIDA --- */}
+            <View style={styles.ratingContainer}>
+              {user?.rating && user.rating.count > 0 ? (
+                <>
+                  {/* Usamos un color dorado para la estrella */}
+                  <MaterialCommunityIcons name="star" size={20} color="#FFD700" />
+                  {/* Mostramos el promedio con 1 decimal */}
+                  <Text style={styles.ratingAverage}>{user.rating.average.toFixed(1)}</Text>
+                  {/* Mostramos el total de valoraciones */}
+                  <Text style={styles.ratingCount}>({user.rating.count} valoraciones)</Text>
+                </>
+              ) : (
+                // Texto si no hay valoraciones
+                <Text style={styles.ratingCount}>Aún no tienes valoraciones</Text>
+              )}
+            </View>
+            {/* --- Fin de la sección de Rating --- */}
           </View>
 
           {/* --- Información de Contacto --- */}
           <View style={styles.infoSection}>
             <Text style={styles.sectionTitle}>Información de Contacto</Text>
             
-            {/* Ahora solo pasamos las props necesarias */}
             <InfoRow 
               icon="email-outline" 
               text={user?.email || 'email@example.com'} 
@@ -139,6 +165,7 @@ export default function ProfileScreen() {
   );
 }
 
+// --- 3. ESTILOS AÑADIDOS ---
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
@@ -171,6 +198,31 @@ const createStyles = (theme: typeof Colors.light) =>
       color: theme.text,
       opacity: 0.7,
     },
+    // --- Estilos nuevos para el Rating ---
+    ratingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 10,
+      backgroundColor: theme.card, // Usamos el color de tarjeta para que resalte
+      paddingVertical: 8,
+      paddingHorizontal: 15,
+      borderRadius: 20, // Forma de píldora
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    ratingAverage: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginLeft: 5,
+      marginRight: 8,
+    },
+    ratingCount: {
+      fontSize: 14,
+      color: theme.text,
+      opacity: 0.7,
+    },
+    // --- Fin de estilos nuevos ---
     infoSection: {
       marginBottom: 25,
     },

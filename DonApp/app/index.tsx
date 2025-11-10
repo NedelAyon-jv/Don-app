@@ -1,9 +1,5 @@
 import { Colors } from '@/constants/theme';
-// ==============================================
-// ==== ¡CAMBIO DE IMPORTACIÓN! ====
-// Ya no usamos 'user.services', usamos 'auth.services'
 import { login } from "@/services/user/auth.services";
-// ==============================================
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
@@ -12,6 +8,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -37,16 +34,8 @@ export default function LoginScreen() {
   }
 
   try {
-    // ==============================================
-    // ==== ¡LÓGICA ACTUALIZADA! ====
-    // 1. Llamamos a 'login' (del nuevo auth.services)
-    // 2. 'login' ya guarda el token y el usuario en AsyncStorage por nosotros
-    // ==============================================
     const res = await login({ email, password });
 
-    // 'res' es la respuesta de la API. Asumimos que si hay error,
-    // 'apiClient' lanza una excepción (manejada por el catch).
-    // Si la API devuelve un error 200 con un flag, lo comprobamos:
     if (res.error || !res.token) {
       Alert.alert("Credenciales incorrectas", res.message || "Email o contraseña incorrectos");
       return;
@@ -60,7 +49,6 @@ export default function LoginScreen() {
     router.replace("/(tabs)");
 
   } catch (error: any) {
-    // Si 'apiClient' lanza un error (ej. 401, 404, 500)
     console.error("Error en handleLogin:", error);
     Alert.alert("Error", error.message || "Email o contraseña incorrectos");
   }
@@ -73,7 +61,10 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
 
-        <View style={styles.content}>
+        <ScrollView 
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
           <Image
             source={require('@/assets/images/logo5.png')}
             style={styles.logo}
@@ -82,7 +73,6 @@ export default function LoginScreen() {
           <Text style={styles.title}>DonApp</Text>
           <Text style={styles.subtitle}>Inicia sesión</Text>
 
-          {/* ... (Inputs de email y contraseña) ... */}
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="email-outline" size={22} color={theme.text} style={styles.inputIcon} />
             <TextInput
@@ -115,28 +105,23 @@ export default function LoginScreen() {
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Iniciar Sesión</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
-        {/* ============================================== */}
-        {/* ==== BOTÓN PARA IR A SIGNUP ==== */}
-        {/* ============================================== */}
+        </KeyboardAvoidingView>
+
         <TouchableOpacity
           style={styles.signupContainer}
-          onPress={() => router.push('/signup')} // <-- Navega a 'signup.tsx'
+          onPress={() => router.push('/signup')}
         >
           <Text style={styles.signupText}>
             ¿No tienes cuenta?{' '}
             <Text style={styles.signupLink}>Regístrate aquí</Text>
           </Text>
         </TouchableOpacity>
-
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// (Todos los estilos... 'createStyles')
-// ... (Tu código de estilos va aquí)
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({
     safeArea: {
@@ -148,13 +133,13 @@ const createStyles = (theme: typeof Colors.light) =>
       padding: 24,
     },
     content: {
-      flex: 2, // <-- Dale más espacio abajo
-      justifyContent: 'flex-start', // <-- Alineado arriba
+      flex: 2,
+      justifyContent: 'flex-start',
       alignItems: 'center',
     },
     logoContainer: {
-      flex: 1.2, // <-- Dale más espacio arriba
-      justifyContent: 'center', // Centrado
+      flex: 1.2,
+      justifyContent: 'center',
       alignItems: 'center',
     },
     logo: {
@@ -214,7 +199,7 @@ const createStyles = (theme: typeof Colors.light) =>
       top: 25,
     },
     buttonText: {
-      color: theme.background, // Usa el color de fondo para el texto
+      color: theme.background,
       fontSize: 18,
       fontWeight: 'bold',
     },

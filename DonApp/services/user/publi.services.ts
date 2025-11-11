@@ -1,121 +1,49 @@
-// publi.services.ts (LA VERSIÓN FINAL CON PRUEBA DE LOG)
-import { apiClient } from "../API.services";
-import { AxiosResponse } from "axios";
+import { apiClient } from '../API.services'; // Asumiendo la ruta de tu APIClient
 
-// ✅ Crear publicación con imágenes (Trueque / Donación / Venta)
-export const createPublication = async (publicationData: any, imagesArray: string[]) => {
-  
-  // --- PRUEBA DE FUEGO ---
-  console.log("--- DENTRO DE createPublication (publi.services.ts) ---");
-  console.log("Datos recibidos por el servicio:");
-  console.log(JSON.stringify(publicationData, null, 2));
-  // --- FIN DE PRUEBA ---
-  
+// 1. Definimos la interfaz de lo que esperamos de la API
+// Basado en el PDF (PublicaionData)
+export interface ApiPublication {
+  id: string; // La API debe devolver un ID
+  title: string;
+  description: string;
+  type: 'donation_offer' | 'donation_request' | 'trade_offer'; // Tipos de la API
+  category: string;
+  condition: string;
+  quantity: number;
+  availability: string;
+  pickupRequirements: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string; // Usaremos esta
+  };
+  images: string[]; // Esperamos un array de URLs de imagen
+  tags: string[];
+  createdAt: string; // La API suele incluir esto
+}
+
+/**
+ * Obtiene todas las publicaciones del feed.
+ */
+export const getAllPublications = async (): Promise<ApiPublication[]> => {
   try {
-    const formData = new FormData();
+    // Asumimos que el endpoint es '/publications' como en tus otros servicios
+    
+    // --- LÍNEA CORREGIDA ---
+    // Le decimos a apiClient que esperamos un objeto que CONTIENE 'data'
+    // (basado en cómo se ven las otras respuestas de tu API en el PDF)
+    const response = await apiClient.get<{ success: boolean, data: ApiPublication[] }>('/publications');
+    
+    // El PDF es inconsistente, pero lo más probable es que la API
+    // devuelva un objeto { success: true, data: [...] }
+    // Así que solo debemos devolver la propiedad 'data'
+    
+    // --- LÍNEA CORREGIDA (38) ---
+    // Si la respuesta de la API es correcta, response.data.data será el array
+    return response.data.data; 
 
-    // --- Agregar JSON de la publicación ---
-    formData.append("publicationData", JSON.stringify(publicationData));
-
-    // --- Agregar imágenes ---
-    imagesArray.forEach((uri, index) => {
-      formData.append("images", {
-        uri,
-        type: "image/jpeg",
-        name: `image_${index}.jpg`,
-      } as any);
-    });
-
-    const response: AxiosResponse<any> = await apiClient.post("/publications", formData);
-    return response.data;
-  } catch (error: any) {
-    console.log("❌ Error en createPublication:", error);
-    throw error;
-  }
-};
-
-// ✅ Crear donación
-export const createDonation = async (donationData: any, imagesUri: string[]) => {
-  return createPublication({ ...donationData, type: "donation_offer" }, imagesUri);
-};
-
-//
-// --- EL RESTO DE FUNCIONES NO CAMBIAN ---
-//
-
-// ✅ Actualizar publicación
-export const updatePublication = async (
-  publicationId: string,
-  updatedData: any,
-  imagesUri: string[] = []
-) => {
-  try {
-    const formData = new FormData();
-    formData.append("publicationData", JSON.stringify(updatedData));
-
-    imagesUri.forEach((uri, index) => {
-      formData.append("images", {
-        uri,
-        name: `updated_${index}.jpg`,
-        type: "image/jpeg",
-      } as any);
-    });
-
-    return await apiClient.put(`/publications/update/${publicationId}`, formData);
-  } catch (error: any) {
-    console.log("❌ Error actualizando publicación:", error);
-    throw error;
-  }
-};
-
-// ✅ Obtener publicaciones
-export const getPublications = async (filters?: { type?: string; category?: string; limit?: number }) => {
-  try {
-    return await apiClient.get("/publications", filters ? { params: filters } : undefined);
-  } catch (error: any) {
-    console.error("❌ Error obteniendo publicaciones:", error);
-    throw error;
-  }
-};
-
-// ✅ Publicaciones cercanas
-export const getNearbyPublications = async ({
-  latitude,
-  longitude,
-  radius,
-  type,
-}: {
-  latitude: number;
-  longitude: number;
-  radius: number;
-  type?: string;
-}) => {
-  try {
-    const params: any = { latitude, longitude, radius };
-    if (type) params.type = type;
-    return await apiClient.get("/publications/nearby", { params });
-  } catch (error: any) {
-    console.error("❌ Error obteniendo publicaciones cercanas:", error);
-    throw error;
-  }
-};
-
-// ✅ Mis publicaciones
-export const getMyPublications = async () => {
-  try {
-    return await apiClient.get("/publications/user/me");
-  } catch (error: any) {
-    console.log("❌ Error obteniendo mis publicaciones:", error);
-    throw error;
-  }
-};
-
-// ✅ Publicaciones de un usuario específico
-export const getUserPublications = async (userId: string) => {
-  try {
-    return await apiClient.get(`/publications/user/${userId}`);
-  } catch (error: any) {
-    console.log("❌ Error obteniendo publicaciones del usuario:", error);
-    throw error;
+  } catch (error) {
+    console.error("❌ Error al obtener publicaciones:", error);
+    throw new Error("No se pudieron cargar las publicaciones.");
   }
 };

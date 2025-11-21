@@ -14,7 +14,7 @@ const donationCenters = [
     colonia: 'Camino Real',
     status: 'Abierto',
     horario: 'L-V 9:00 AM - 5:00 PM',
-    coordinate: { latitude: 24.118, longitude: -110.325 },
+    coordinate: { latitude: 24.05644711189269, longitude: -110.29847197234919 },
   },
   {
     id: '2',
@@ -22,7 +22,7 @@ const donationCenters = [
     colonia: 'Santa Fe',
     status: 'Cerrado',
     horario: 'S 10:00 AM - 2:00 PM',
-    coordinate: { latitude: 24.110, longitude: -110.334 },
+    coordinate: { latitude: 24.092945449503386, longitude: -110.32447867009112 },
   },
   {
     id: '3',
@@ -30,7 +30,7 @@ const donationCenters = [
     colonia: 'Centro',
     status: 'Abierto',
     horario: 'L-S 8:00 AM - 6:00 PM',
-    coordinate: { latitude: 24.163, longitude: -110.316 },
+    coordinate: { latitude: 24.152421525195038, longitude: -110.3122907112721 },
   },
   {
     id: '4',
@@ -38,7 +38,7 @@ const donationCenters = [
     colonia: 'Indeco',
     status: 'Abierto',
     horario: 'L-V 10:00 AM - 4:00 PM',
-    coordinate: { latitude: 24.116, longitude: -110.338 },
+    coordinate: { latitude: 24.122461728767377, longitude: -110.32482199170396 },
   },
 ];
 

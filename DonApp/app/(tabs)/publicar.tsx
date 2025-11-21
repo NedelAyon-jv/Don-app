@@ -1,8 +1,7 @@
-// publicar.tsx
 import { Colors } from '@/constants/theme';
+import { createDonation, createPublication } from '@/services/user/publi.services';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { createDonation, createPublication } from '@/services/user/publi.services';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
@@ -28,6 +27,7 @@ export default function PublishScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  // --- CORRECCIÓN 1: Variable renombrada correctamente a 'images' ---
   const [images, setImages] = useState<string[]>([]);
   const [postType, setPostType] = useState<PostType>('Donación');
 
@@ -37,30 +37,26 @@ export default function PublishScreen() {
   const [restrictions, setRestrictions] = useState('');
   const [deadline, setDeadline] = useState('');
 
-const pickImage = async () => {
-  if (images.length >= 5) {
-    Alert.alert('Límite alcanzado', 'Solo puedes subir un máximo de 5 imágenes.');
-    return;
-  }
+  const pickImage = async () => {
+    if (images.length >= 5) {
+      Alert.alert('Límite alcanzado', 'Solo puedes subir un máximo de 5 imágenes.');
+      return;
+    }
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    quality: 0.85,
-  });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.85,
+    });
 
-  if (!result.canceled && result.assets?.length) {
-    setImages([...images, result.assets[0].uri]);
-  }
-};
+    if (!result.canceled && result.assets?.length) {
+      setImages([...images, result.assets[0].uri]);
+    }
+  };
 
   const removeImage = (uri: string) => {
     setImages(images.filter(img => img !== uri));
   };
-
-// Copia y reemplaza esta función completa en publicar.tsx
-
-  // Reemplaza ESTA FUNCIÓN en publicar.tsx
 
   const handleSubmit = async () => {
     if (!title || !description) {
@@ -76,7 +72,6 @@ const pickImage = async () => {
     try {
       if (postType === "Donación") {
         
-        // --- CÓDIGO DE DONACIÓN (Sin cambios) ---
         const donationData = {
           title,
           description,
@@ -107,12 +102,11 @@ const pickImage = async () => {
         
       } else {
         
-        // --- INICIO DE LA SOLUCIÓN HÍBRIDA (TRUEQUE) ---
-        
         const publicationData = {
           title,
           description,
-          type: "exchange",
+          // --- CORRECCIÓN 2: Usar 'trade_offer' para coincidir con la API ---
+          type: "trade_offer", 
           category: "other",
           quantity: 1,
           availability: "available",
@@ -123,27 +117,15 @@ const pickImage = async () => {
             address: "Ubicación no especificada",
           },
           tags: ["trueque"],
-          
-          // --- 1. CAMPOS PARA EL ERROR 500 ---
-          // (Los que pide el mensaje de error, en el nivel superior)
           condition: "good", 
-          seekingItems: ["ropa", "libros", "juguetes"],
-
-          // --- 2. CAMPOS ORIGINALES (POR SI ACASO) ---
-          // (Los que tenías en tu primer archivo, anidados)
-          publicationDetails: {
-            exchangeCondition: "solo artículos en buen estado",
-            exchangeSeekingItems: ["ropa", "libros", "juguetes"],
-          }
+          seekingItems: ["ropa", "libros", "juguetes"], // Puedes conectar esto a un input si quieres
         };
 
-        // (Los console.log se quedan para verificar)
-        console.log("--- ENVIANDO TRUEQUE (HÍBRIDO) ---");
+        console.log("--- ENVIANDO TRUEQUE ---");
         console.log(JSON.stringify(publicationData, null, 2));
         
         await createPublication(publicationData, images);
         Alert.alert("Éxito", "Trueque publicado correctamente.");
-        // --- FIN DE LA SOLUCIÓN HÍBRIDA ---
       }
 
       // Limpiar campos
@@ -156,13 +138,16 @@ const pickImage = async () => {
       setDeadline('');
       setPriority('medium');
 
-    } catch (error) {
+    } catch (error: any) {
       console.log("❌ Error en createPublication:", error);
-      Alert.alert("Error", postType === "Donación" ? "No se pudo publicar la donación." : "No se pudo publicar el trueque.");
+      // Agregamos el log detallado por si vuelve a fallar la validación
+      if (error.response?.data) {
+        console.log("⚠️ DETALLE ERROR:", JSON.stringify(error.response.data, null, 2));
+      }
+      Alert.alert("Error", "No se pudo publicar el artículo.");
     }
   };
-  // El resto del componente (renderDonationFields, return, styles) no cambia.
-  
+
   const renderDonationFields = () => (
     <>
       <Text style={styles.label}>Prioridad</Text>
@@ -293,7 +278,6 @@ const pickImage = async () => {
     </SafeAreaView>
   );
 }
-
 // --- Estilos (sin cambios) ---
 const createStyles = (theme: typeof Colors.light) =>
   StyleSheet.create({

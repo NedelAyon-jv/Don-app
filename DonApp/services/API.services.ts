@@ -7,7 +7,7 @@ class APIClient {
   constructor() {
     this.client = axios.create({
       baseURL: "https://don-app.onrender.com/api",
-      timeout: 10000,
+      timeout: 20000,
     });
 
     this.setupInterceptors();
